@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\Business\Core\Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="InputDeserializingTests\" />
+  </ItemGroup>
+
 </Project>

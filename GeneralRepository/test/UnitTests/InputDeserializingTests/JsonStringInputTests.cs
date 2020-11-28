@@ -1,6 +1,8 @@
 ﻿using Core.Exceptions.Application;
 using Core.Extensions;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Xunit;
 
@@ -49,6 +51,21 @@ namespace UnitTests.InputDeserializingTests
 			Assert.True(obj.ContainsKey("age"));
 			Assert.True(obj.ContainsKey("address"));
 			Assert.True(obj.ContainsKey("items"));
+
+			Assert.Equal(2, (obj["items"] as IEnumerable<object>).Count());
+		}
+
+		[Fact]
+		public void ToDictionary_WithNestedObject_ShouldReturnValidDictionary()
+		{
+			var input = JsonSerializer.Serialize(new { name = "name", innerObject = new { size=34 } });
+
+			var obj = input.ToGeneralDictionary();
+
+			Assert.True(obj.ContainsKey("name"));
+			Assert.True(obj.ContainsKey("innerObject"));
+			Assert.Equal("name",obj["name"]);
+			Assert.Equal(34D, (obj["innerObject"] as IDictionary<string, object>)["size"]);
 		}
 
 		[Fact]

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Core.Extensions
 {
@@ -52,8 +53,17 @@ namespace Core.Extensions
 					JsonValueKind.Number => value.GetDouble(),
 					JsonValueKind.Null or JsonValueKind.Undefined => null,
 					JsonValueKind.Object => new ObjectToDictionaryConverter(value.GetRawText().ToGeneralDictionary()).Translate(),
+					JsonValueKind.Array => TranslateArray(value),
 					_ => throw new NotImplementedException(),
 				};
+			}
+
+			private static object TranslateArray(JsonElement value)
+			{
+				var res = new List<object>();
+				foreach(var item in value.EnumerateArray())
+					res.Add(JsonElementToValue(item));
+				return res;
 			}
 		}
 	}

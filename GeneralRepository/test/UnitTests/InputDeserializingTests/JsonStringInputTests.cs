@@ -45,7 +45,7 @@ namespace UnitTests.InputDeserializingTests
 		{
 			var input = TestObjectJson;
 			
-			var obj = input.ToGeneralDictionary();
+			var obj = input.ToGeneralDictionary().Elements;
 
 			Assert.True(obj.ContainsKey("name"));
 			Assert.True(obj.ContainsKey("age"));
@@ -60,7 +60,7 @@ namespace UnitTests.InputDeserializingTests
 		{
 			var input = JsonSerializer.Serialize(new { name = "name", innerObject = new { size=34 } });
 
-			var obj = input.ToGeneralDictionary();
+			var obj = input.ToGeneralDictionary().Elements;
 
 			Assert.True(obj.ContainsKey("name"));
 			Assert.True(obj.ContainsKey("innerObject"));
@@ -78,7 +78,7 @@ namespace UnitTests.InputDeserializingTests
 				DOB = DateTime.Now.AddYears(-34)
 			};
 
-			var dictionary = obj.ToGeneralDictionary();
+			var dictionary = obj.ToGeneralDictionary().Elements;
 
 			Assert.True(dictionary.ContainsKey(nameof(TestClass.Name)));
 			Assert.True(dictionary.ContainsKey(nameof(TestClass.Age)));
@@ -87,6 +87,34 @@ namespace UnitTests.InputDeserializingTests
 			Assert.Equal(obj.Name,dictionary[nameof(TestClass.Name)] as string);
 			Assert.Equal(obj.Age, Convert.ToInt32(dictionary[nameof(TestClass.Age)]));
 			Assert.Equal(obj.DOB, Convert.ToDateTime(dictionary[nameof(TestClass.DOB)]));
+		}
+
+		[Fact]
+		public void Deserilize_WithIDictionary_ShouldCastToObject()
+		{
+			TestClass testClass = new TestClass
+			{
+				Name = "name",
+				Age = 34,
+				DOB = DateTime.Now.AddYears(-34)
+			};
+			var dictionary = testClass.ToGeneralDictionary().Elements;
+
+			var deserializedObject = JsonSerializer.Deserialize<TestClass>(JsonSerializer.Serialize(dictionary));
+
+			Assert.Equal("name", deserializedObject.Name);
+			Assert.Equal(34, deserializedObject.Age);
+			Assert.Equal(testClass.DOB, deserializedObject.DOB);
+		}
+
+		[Fact]
+		public void ToDictionary_WithInnerObject_ShouldReturnElementValueKind()
+		{
+			var elementValueKinds = TestObject.ToGeneralDictionary().ElementValueKind;
+
+			Assert.Equal(JsonValueKind.Number, elementValueKinds["age"]);
+			Assert.Equal(JsonValueKind.String, elementValueKinds["address.city"]);
+			Assert.Equal(JsonValueKind.Number, elementValueKinds["items.id"]);
 		}
 	}
 }

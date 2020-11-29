@@ -1,18 +1,20 @@
 ﻿using Core.Exceptions.Application;
+using Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Core.Extensions
 {
 	public static class ObjectExtensions
 	{
-		public static IDictionary<string, object> ToGeneralDictionary(this object obj)
+		public static JsonTranslation ToGeneralDictionary(this object obj)
 		{
 			try
 			{
-				return new ObjectToDictionaryConverter(obj).Translate();
+				var res = new ObjectToDictionaryConverter(obj);
+				var translated = res.Translate();
+				return new JsonTranslation { Elements = translated, ElementValueKind = res.ElementValueKind };
 			}
 			catch (JsonException)
 			{
@@ -22,18 +24,30 @@ namespace Core.Extensions
 
 		private class ObjectToDictionaryConverter
 		{
-			public IDictionary<string,JsonElement> Elements { get; set; }
-			public ObjectToDictionaryConverter(object obj)
+			IDictionary<string,JsonElement> Elements { get; set; }
+			public IDictionary<string, JsonValueKind> ElementValueKind { get; set; } = new Dictionary<string, JsonValueKind>();
+			public string ParentPath { get; set; } = "";
+			public ObjectToDictionaryConverter(object obj, string parentPath = "")
 			{
 				Elements = GetLowLevelDictionary(obj);
+				ParentPath = parentPath;
 			}
 
-			public IDictionary<string,object> Translate()
+			public IDictionary<string,object> Translate(string parent="")
 			{
 				var result = new Dictionary<string, object>();
 				foreach (var item in Elements)
-					result[item.Key] = JsonElementToValue(item.Value);
+				{
+					result[item.Key] = JsonElementToValue(item.Value, item.Key);
+					AddElementValueKind(item.Key, item.Value.ValueKind);
+				}
 				return result;
+			}
+
+			private void AddElementValueKind(string key, JsonValueKind valueKind)
+			{
+				var path = $"{ParentPath}{(string.IsNullOrEmpty(ParentPath) ? "" : ".")}{key}";
+				AddToElementValueKindDictionary(new KeyValuePair<string, JsonValueKind>(path, valueKind));
 			}
 
 			private static IDictionary<string, JsonElement> GetLowLevelDictionary(object obj)
@@ -44,25 +58,47 @@ namespace Core.Extensions
 					return JsonSerializer.Deserialize<IDictionary<string, JsonElement>>(JsonSerializer.Serialize(obj));
 			}
 
-			private static object JsonElementToValue(JsonElement value)
+			private object JsonElementToValue(JsonElement value,string parent)
 			{
-				return value.ValueKind switch
+				switch(value.ValueKind)
 				{
-					JsonValueKind.String => value.GetString(),
-					JsonValueKind.False or JsonValueKind.True => value.GetBoolean(),
-					JsonValueKind.Number => value.GetDouble(),
-					JsonValueKind.Null or JsonValueKind.Undefined => null,
-					JsonValueKind.Object => new ObjectToDictionaryConverter(value.GetRawText().ToGeneralDictionary()).Translate(),
-					JsonValueKind.Array => TranslateArray(value),
-					_ => throw new NotImplementedException(),
+					case JsonValueKind.String: return value.GetString();
+					case JsonValueKind.False:
+					case JsonValueKind.True: 
+						return value.GetBoolean();
+					case JsonValueKind.Number: return value.GetDouble();
+					case JsonValueKind.Null:
+					case JsonValueKind.Undefined: return null;
+					case JsonValueKind.Object:
+						{
+							var converter = new ObjectToDictionaryConverter(value.GetRawText().ToGeneralDictionary().Elements, parent);
+							var res = converter.Translate();
+							foreach (var item in converter.ElementValueKind)
+							{
+								AddToElementValueKindDictionary(item);
+							}
+							return res;
+						};
+					case JsonValueKind.Array: return TranslateArray(value,parent);
+					default:
+						throw new NotImplementedException();
 				};
 			}
 
-			private static object TranslateArray(JsonElement value)
+			private void AddToElementValueKindDictionary(KeyValuePair<string, JsonValueKind> item)
+			{
+				var path = item.Key;
+				var valueKind = item.Value;
+				if (ElementValueKind.ContainsKey(path) && ElementValueKind[path] != valueKind)
+					throw new InconsistanceJsonStructureException();
+				ElementValueKind[path] = valueKind;
+			}
+
+			private object TranslateArray(JsonElement value, string parent)
 			{
 				var res = new List<object>();
 				foreach(var item in value.EnumerateArray())
-					res.Add(JsonElementToValue(item));
+					res.Add(JsonElementToValue(item,parent));
 				return res;
 			}
 		}

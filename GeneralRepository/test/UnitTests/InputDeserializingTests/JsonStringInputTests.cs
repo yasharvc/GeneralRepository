@@ -113,8 +113,15 @@ namespace UnitTests.InputDeserializingTests
 			var elementValueKinds = TestObject.ToGeneralDictionary().ElementValueKind;
 
 			Assert.Equal(JsonValueKind.Number, elementValueKinds["age"]);
+			Assert.Equal(JsonValueKind.String, elementValueKinds["name"]);
+
 			Assert.Equal(JsonValueKind.String, elementValueKinds["address.city"]);
+			Assert.Equal(JsonValueKind.String, elementValueKinds["address.country"]);
+			Assert.Equal(JsonValueKind.Object, elementValueKinds["address"]);
+
+			Assert.Equal(JsonValueKind.Array, elementValueKinds["items"]);
 			Assert.Equal(JsonValueKind.Number, elementValueKinds["items.id"]);
+			Assert.Equal(JsonValueKind.String, elementValueKinds["items.title"]);
 		}
 	}
 }

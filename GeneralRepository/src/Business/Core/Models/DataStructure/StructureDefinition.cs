@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Core.Models.DataStructure
 {
-	class StructureDefinition
+	public class StructureDefinition : Model
 	{
+		public string Name { get; set; }
+		public List<Field> Fields { get; set; }
 	}
 }

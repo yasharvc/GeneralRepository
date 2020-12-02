@@ -43,6 +43,8 @@ namespace Core.Services
 						&& element.Value == JsonValueKind.String
 						&& !IsGuid(value))
 						return false;
+					if (field.DataType == BasicDataTypeEnum.None)
+						return CompareSubs(field, element.Value);
 				}
 				catch
 				{
@@ -50,6 +52,23 @@ namespace Core.Services
 				}
 			}
 			return true;
+		}
+
+		private bool CompareSubs(Field field, JsonValueKind elementValueKind) => field.RelationType switch
+		{
+			RelationTypeEnum.OneToOne => CompareObjectSub(field, elementValueKind),
+			RelationTypeEnum.OneToMany => CompareArraySub(field, elementValueKind),
+			_ => throw new InvalidStructureException()
+		};
+
+		private bool CompareArraySub(Field field, JsonValueKind elementValueKind)
+		{
+			throw new NotImplementedException();
+		}
+
+		private bool CompareObjectSub(Field field, JsonValueKind elementValueKind)
+		{
+			throw new NotImplementedException();
 		}
 
 		private static bool IsGuid(string value)

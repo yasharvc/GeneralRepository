@@ -189,5 +189,37 @@ namespace UnitTests
 
 			Assert.False(comparer.Compare(structure, obj));
 		}
+
+		[Fact]
+		public void Compare_WithObjectFieldInStructure_ShouldReturnTrue()
+		{
+			var objDictionary = new { address = new { city = "tabriz" } }.ToGeneralDictionary();
+			var structure = new StructureDefinition
+			{
+				Id = "user",
+				Name = "User",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						DataType = BasicDataTypeEnum.None,
+						FullName="User.address",
+						Name = "address",
+						RelationType = RelationTypeEnum.OneToOne,
+						Id = "User_address"
+					},
+					new Field
+					{
+						DataType = BasicDataTypeEnum.String,
+						FullName="User.address.city",
+						Name = "address.city",
+						RelationType = RelationTypeEnum.NoRelation,
+						Id = "User_address_city"
+					}
+				}
+			};
+
+			Assert.True(new StructureComparer().Compare(structure, objDictionary));
+		}
 	}
 }

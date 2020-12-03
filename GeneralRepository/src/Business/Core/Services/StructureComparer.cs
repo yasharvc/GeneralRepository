@@ -27,7 +27,10 @@ namespace Core.Services
 				catch (InvalidComparisonException)
 				{
 					if (field.DataType == BasicDataTypeEnum.None)
-						return CompareSubs(field, element.Value);
+						if (!CompareSubs(field, element.Value))
+							return false;
+						else
+							continue;
 					string value = jsonTranslation.Elements[element.Key].ToString();
 					if ((field.DataType == BasicDataTypeEnum.DateTime || field.DataType == BasicDataTypeEnum.Date)
 						&& element.Value == JsonValueKind.String

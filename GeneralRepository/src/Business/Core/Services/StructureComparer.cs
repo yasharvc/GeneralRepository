@@ -26,6 +26,8 @@ namespace Core.Services
 				}
 				catch (InvalidComparisonException)
 				{
+					if (field.DataType == BasicDataTypeEnum.None)
+						return CompareSubs(field, element.Value);
 					string value = jsonTranslation.Elements[element.Key].ToString();
 					if ((field.DataType == BasicDataTypeEnum.DateTime || field.DataType == BasicDataTypeEnum.Date)
 						&& element.Value == JsonValueKind.String
@@ -43,33 +45,30 @@ namespace Core.Services
 						&& element.Value == JsonValueKind.String
 						&& !IsGuid(value))
 						return false;
-					if (field.DataType == BasicDataTypeEnum.None)
-						return CompareSubs(field, element.Value);
 				}
-				catch
+				catch(Exception e)
 				{
+					var str = e.Message;
 					return false;
 				}
 			}
 			return true;
 		}
 
-		private bool CompareSubs(Field field, JsonValueKind elementValueKind) => field.RelationType switch
+		private bool CompareSubs(Field field, JsonValueKind elementValueKind)
 		{
-			RelationTypeEnum.OneToOne => CompareObjectSub(field, elementValueKind),
-			RelationTypeEnum.OneToMany => CompareArraySub(field, elementValueKind),
-			_ => throw new InvalidStructureException()
-		};
+			return field.RelationType switch
+			{
+				RelationTypeEnum.OneToOne => CompareObjectSub(field, elementValueKind),
+				RelationTypeEnum.OneToMany => CompareArraySub(field, elementValueKind),
+				_ => throw new InvalidStructureException()
+			};
+		}
 
 		private bool CompareArraySub(Field field, JsonValueKind elementValueKind)
-		{
-			throw new NotImplementedException();
-		}
+			 => field.DataType == BasicDataTypeEnum.None && elementValueKind == JsonValueKind.Array;
 
-		private bool CompareObjectSub(Field field, JsonValueKind elementValueKind)
-		{
-			throw new NotImplementedException();
-		}
+		private bool CompareObjectSub(Field field, JsonValueKind elementValueKind) => field.DataType == BasicDataTypeEnum.None && elementValueKind == JsonValueKind.Object;
 
 		private static bool IsGuid(string value)
 		{

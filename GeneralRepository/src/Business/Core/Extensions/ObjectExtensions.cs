@@ -22,6 +22,20 @@ namespace Core.Extensions
 			}
 		}
 
+		public static JsonTranslation ToGeneralDictionary(this object obj,string parent)
+		{
+			try
+			{
+				var res = new ObjectToDictionaryConverter(obj,parent);
+				var translated = res.Translate(parent);
+				return new JsonTranslation { Elements = translated, ElementValueKind = res.ElementValueKind };
+			}
+			catch (JsonException)
+			{
+				throw new InvalidJsonStringInputException();
+			}
+		}
+
 		private class ObjectToDictionaryConverter
 		{
 			IDictionary<string,JsonElement> Elements { get; set; }
@@ -71,15 +85,13 @@ namespace Core.Extensions
 					case JsonValueKind.Undefined: return null;
 					case JsonValueKind.Object:
 						{
-							var converter = new ObjectToDictionaryConverter(value.GetRawText().ToGeneralDictionary().Elements, parent);
-							var res = converter.Translate();
+							var converter = new ObjectToDictionaryConverter(value.GetRawText().ToGeneralDictionary(parent).Elements, parent);
+							var res = converter.Translate(parent);
 							foreach (var item in converter.ElementValueKind)
-							{
 								AddToElementValueKindDictionary(item);
-							}
 							return res;
 						};
-					case JsonValueKind.Array: return TranslateArray(value,parent);
+					case JsonValueKind.Array: return TranslateArray(value,$"{(ParentPath.Length > 0 ? ParentPath + "." : "")}{parent}");
 					default:
 						throw new NotImplementedException();
 				};

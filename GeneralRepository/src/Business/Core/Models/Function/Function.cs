@@ -8,5 +8,6 @@ namespace Core.Models.Function
 		public string Name { get; set; }
 		public Field ReturnType { get; set; }
 		public IEnumerable<Parameter> Parameters { get; set; }
+		public string CallPath { get; set; }
 	}
 }

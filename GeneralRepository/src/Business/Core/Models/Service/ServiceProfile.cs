@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Core.Enums;
 
 namespace Core.Models.Service
 {
 	public class ServiceProfile
 	{
+		public string ObjectID { get; set; }
+		public string Description { get; set; }
+		public string BaseUrl { get; set; }
+		public ServiceCallTypeEnum CallType { get; set; }
 	}
 }

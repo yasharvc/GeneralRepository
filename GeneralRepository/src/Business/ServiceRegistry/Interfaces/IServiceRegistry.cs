@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Core.Models.Service;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Core.Models.Service;
 
 namespace ServiceRegistry.Interfaces
 {
@@ -15,6 +14,5 @@ namespace ServiceRegistry.Interfaces
 		Task<bool> Unregister(Guid registeredId);
 		event EventHandler<ServiceProfile> OnServiceRegister;
 		event EventHandler<Guid> OnServiceUnregister;
-
 	}
 }

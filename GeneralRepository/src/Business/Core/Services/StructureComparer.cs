@@ -60,12 +60,12 @@ namespace Core.Services
 
 		private bool CompareSubs(Field field, JsonValueKind elementValueKind)
 		{
-			return field.RelationType switch
+			switch (field.RelationType)
 			{
-				RelationTypeEnum.OneToOne => CompareObjectSub(field, elementValueKind),
-				RelationTypeEnum.OneToMany => CompareArraySub(field, elementValueKind),
-				_ => throw new InvalidStructureException()
-			};
+				case RelationTypeEnum.OneToOne:return CompareObjectSub(field, elementValueKind);
+				case RelationTypeEnum.OneToMany:return CompareArraySub(field, elementValueKind);
+				default: throw new InvalidStructureException();
+			}
 		}
 
 		private bool CompareArraySub(Field field, JsonValueKind elementValueKind)

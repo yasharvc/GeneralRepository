@@ -1,5 +1,6 @@
 ﻿using Core.Enums;
 using System;
+using System.Linq;
 
 namespace Function
 {
@@ -7,6 +8,10 @@ namespace Function
 	{
 		public static string MakePath(FunctionPathTypeEnum callType, string path,string funcName,string extraPathToFunc = "")
 		{
+			if (string.IsNullOrEmpty(path))
+				throw new ArgumentException(nameof(path));
+			if (string.IsNullOrEmpty(funcName))
+				throw new ArgumentException(nameof(funcName));
 			if (!string.IsNullOrEmpty(extraPathToFunc))
 				extraPathToFunc = $"{(path.EndsWith("/") ? "" : "/")}{extraPathToFunc}";
 			switch (callType)
@@ -14,19 +19,29 @@ namespace Function
 				case FunctionPathTypeEnum.Function:
 					return $"function://{path}{extraPathToFunc}#{funcName}";
 				case FunctionPathTypeEnum.HTTP:
+					if (!IsCorectPath(path))
+						throw new ArgumentException(nameof(path));
 					return $"http://{path}{extraPathToFunc}/{funcName}";
 				case FunctionPathTypeEnum.HTTPS:
+					if (!IsCorectPath(path))
+						throw new ArgumentException(nameof(path));
 					return $"https://{path}{extraPathToFunc}/{funcName}";
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
+		private static bool IsCorectPath(string path)
+		{
+			var excepts = "/%&@_+=?";
+			return path.All(m => !char.IsPunctuation(m) || excepts.Contains(m));
+		}
+
 		public static FunctionPathTypeEnum GetFunctionPathType(this string path)
 		{
 			try
 			{
-				var str = path.Substring(path.IndexOf(":"));
+				var str = path.Substring(0,path.IndexOf(":"));
 				if (str.Equals("function", StringComparison.OrdinalIgnoreCase))
 					return FunctionPathTypeEnum.Function;
 				else if (str.Equals("http", StringComparison.OrdinalIgnoreCase))

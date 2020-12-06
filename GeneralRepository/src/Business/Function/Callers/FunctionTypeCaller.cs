@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Function.Callers
 {
-	public class FunctionTypeCaller : IFunctionCaller
+	internal class FunctionTypeCaller : IFunctionCaller
 	{
 		public Task<T> Call<T>(Core.Models.Function.Function function, string input)
 		{

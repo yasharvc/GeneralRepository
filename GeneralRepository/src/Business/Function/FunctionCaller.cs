@@ -9,7 +9,7 @@ namespace Function
 	{
 		public Task<T> Call<T>(Core.Models.Function.Function function, string input)
 		{
-			function.
+			throw new NotImplementedException();
 		}
 
 		public Task<T> Call<T>(Core.Models.Function.Function function, JsonTranslation input)

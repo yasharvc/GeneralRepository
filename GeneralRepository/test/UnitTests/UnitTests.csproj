@@ -21,10 +21,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Business\Core\Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="FunctionCallTests\" />
+    <ProjectReference Include="..\..\src\Business\Function\Function.csproj" />
+    <ProjectReference Include="..\..\src\Business\InMemoryServiceRegistry\InMemoryServiceRegistry.csproj" />
+    <ProjectReference Include="..\..\src\Business\ServiceRegistry\ServiceRegistry.csproj" />
   </ItemGroup>
 
 </Project>

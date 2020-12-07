@@ -6,26 +6,20 @@ namespace Function
 {
 	public static class CallPathMaker
 	{
-		public static string MakePath(FunctionPathTypeEnum callType, string path,string funcName,string extraPathToFunc = "")
+
+		//function://[Url to dll]@[Class FullName] => For function call
+		public static string MakePath(FunctionPathTypeEnum callType, string path)
 		{
-			if (string.IsNullOrEmpty(path))
+			if (string.IsNullOrEmpty(path) || !IsCorectPath(path))
 				throw new ArgumentException(nameof(path));
-			if (string.IsNullOrEmpty(funcName))
-				throw new ArgumentException(nameof(funcName));
-			if (!string.IsNullOrEmpty(extraPathToFunc))
-				extraPathToFunc = $"{(path.EndsWith("/") ? "" : "/")}{extraPathToFunc}";
 			switch (callType)
 			{
 				case FunctionPathTypeEnum.Function:
-					return $"function://{path}{extraPathToFunc}#{funcName}";
+					return $"function://{path}";
 				case FunctionPathTypeEnum.HTTP:
-					if (!IsCorectPath(path))
-						throw new ArgumentException(nameof(path));
-					return $"http://{path}{extraPathToFunc}/{funcName}";
+					return $"http://{path}";
 				case FunctionPathTypeEnum.HTTPS:
-					if (!IsCorectPath(path))
-						throw new ArgumentException(nameof(path));
-					return $"https://{path}{extraPathToFunc}/{funcName}";
+					return $"https://{path}";
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -33,7 +27,7 @@ namespace Function
 
 		private static bool IsCorectPath(string path)
 		{
-			var excepts = "/%&@_+=?";
+			var excepts = "\\/%&@_+=:?.";
 			return path.All(m => !char.IsPunctuation(m) || excepts.Contains(m));
 		}
 
@@ -62,31 +56,11 @@ namespace Function
 				var type = path.GetFunctionPathType();
 				if (type == FunctionPathTypeEnum.Function) 
 				{
-					var temp = path.Substring(path.IndexOf(":") + 3);
-					return temp.Substring(0, temp.LastIndexOf("#"));
+					return path.Substring(path.IndexOf(":") + 3);
 				}
 				else if (type == FunctionPathTypeEnum.HTTP || type == FunctionPathTypeEnum.HTTPS)
 				{
-					var temp = path.Substring(path.IndexOf(":") + 3);
-					return temp.Substring(0, temp.LastIndexOf("/"));
-				}
-			}
-			catch { }
-			throw new ArgumentException();
-		}
-
-		public static string GetFunctionName(this string path)
-		{
-			try
-			{
-				var type = path.GetFunctionPathType();
-				if (type == FunctionPathTypeEnum.Function)
-				{
-					return path.Substring(path.LastIndexOf("#") + 1);
-				}
-				else if (type == FunctionPathTypeEnum.HTTP || type == FunctionPathTypeEnum.HTTPS)
-				{
-					return path.Substring(path.LastIndexOf("/") + 1);
+					return path;
 				}
 			}
 			catch { }

@@ -224,7 +224,7 @@ namespace UnitTests.StructureDefintionTests
 								},
 								new Field
 								{
-									Id = "test_city",
+									Id = "test_country",
 									Name = "country",
 									DataType = DataTypeEnum.String,
 									Nullable = false
@@ -238,8 +238,61 @@ namespace UnitTests.StructureDefintionTests
 			Assert.False(await structure.ValidateJsonStructure(new { name = "Yashar", age = "gfh" }));
 		}
 
-		//Null checking
-		//Not null fields that are not met
+		[Fact]
+		public async void ValidateJsonStructure_WithNotNullElementAndNotGivenValueInsideJson_ShouldReturnFalse()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_city",
+						Name = "city",
+						DataType = DataTypeEnum.String,
+						Nullable = false
+					},
+					new Field
+					{
+						Id = "test_country",
+						Name = "country",
+						DataType = DataTypeEnum.String,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.False(await structure.ValidateJsonStructure(new { city = "Tabriz" }));
+		}
+		[Fact]
+		public async void ValidateJsonStructure_WithNotNullElementAndFullValueInsideJson_ShouldReturnTrue()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_city",
+						Name = "city",
+						DataType = DataTypeEnum.String,
+						Nullable = false
+					},
+					new Field
+					{
+						Id = "test_country",
+						Name = "country",
+						DataType = DataTypeEnum.String,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.True(await structure.ValidateJsonStructure(new { city = "Tabriz", country="Iran" }));
+		}
+
 		//Binary => Base64
 		//Time
 		//DateTime

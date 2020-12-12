@@ -1,7 +1,10 @@
 ﻿using Core.Enums;
+using Newtonsoft.Json;
+using NJsonSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Core.Models.DataStructure
 {
@@ -12,6 +15,13 @@ namespace Core.Models.DataStructure
 		public List<Validator> Validators { get; set; }
 
 		public string ToSampleJson() => $"{{\r\n\t{GetFieldsJson()}\r\n}}";
+
+		public async Task<bool> ValidateJsonStructure(string input) => 
+			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(input).Count() == 0;
+		public async Task<bool> ValidateJsonStructure(object input) =>
+			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(JsonConvert.SerializeObject(input)).Count() == 0;
+		public async Task<bool> ValidateJsonStructure<T>(T input) =>
+			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(JsonConvert.SerializeObject(input)).Count() == 0;
 
 		private string GetFieldsJson()
 		{

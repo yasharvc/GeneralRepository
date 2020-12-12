@@ -1,6 +1,4 @@
 ﻿using Core.Enums;
-using Newtonsoft.Json;
-using NJsonSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,22 +14,19 @@ namespace Core.Models.DataStructure
 
 		public string ToSampleJson() => $"{{\r\n\t{GetFieldsJson()}\r\n}}";
 
-		public async Task<bool> ValidateJsonStructure(string input) => 
-			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(input).Count() == 0;
+		public Task<bool> ValidateJsonStructure(string input) => throw new NotImplementedException();
 		public async Task<bool> ValidateJsonStructure(object input) =>
-			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(JsonConvert.SerializeObject(input)).Count() == 0;
-		public async Task<bool> ValidateJsonStructure<T>(T input) =>
-			(await JsonSchema.FromJsonAsync(ToSampleJson())).Validate(JsonConvert.SerializeObject(input)).Count() == 0;
+			await ValidateJsonStructure(System.Text.Json.JsonSerializer.Serialize(input));
 
 		private string GetFieldsJson()
 		{
 			var res = "";
-			foreach (var field in Fields.Where(m => m.FullName.Split('.').Count() == 2))
-			{
+			foreach (var field in Fields.Where(m => IsRootField(m)))
 				res += $"{(res.Length > 0 ? ",\r\n\t" : "")}{GetFieldJson(field)}";
-			}
 			return res;
 		}
+
+		private static bool IsRootField(Field m) => m.ParentPath.Split('.').Count() == 1;
 
 		private string GetFieldJson(Field field)
 		{
@@ -67,7 +62,7 @@ namespace Core.Models.DataStructure
 			var res = "";
 			if (field.DataType == DataTypeEnum.Object)
 			{
-				var subFields = Fields.Where(m => m.FullName.StartsWith($"{field.FullName}."));
+				var subFields = field.Structure.Fields;//Fields.Where(m => m.ParentPath.StartsWith($"{field.ParentPath}."));
 				foreach (var subField in subFields)
 				{
 					res += $"{(res.Length > 0 ? "," : "")}{GetFieldJson(subField)}";

@@ -2,6 +2,7 @@
 {
 	public enum DataTypeEnum : byte
 	{
+		Void = 0,
 		Booelan = 1,
 		Integer = 2,
 		Float = 3,

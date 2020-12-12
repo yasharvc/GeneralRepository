@@ -1,8 +1,7 @@
 ﻿namespace Core.Enums
 {
-	public enum BasicDataTypeEnum : byte
+	public enum DataTypeEnum : byte
 	{
-		None = 0,
 		Booelan = 1,
 		Integer = 2,
 		Float = 3,
@@ -11,6 +10,8 @@
 		Date = 6,
 		Time = 7,
 		Binary = 8,
-		GUID = 9
+		GUID = 9,
+		Object = 10,
+		Array = 11
 	}
 }

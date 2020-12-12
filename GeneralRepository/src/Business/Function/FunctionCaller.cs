@@ -10,33 +10,9 @@ namespace Function
 {
 	public class FunctionCaller : IFunctionCaller
 	{
-		public async Task<T> Call<T>(Core.Models.Function.Function function, string input) 
-			=> await Call<T>(function, input.ToGeneralDictionary());
-
-		public async Task<T> Call<T>(Core.Models.Function.Function function, JsonTranslation input)
-		{
-			var functionType = function.CallPath.GetFunctionPathType();
-			try
-			{
-				switch (functionType)
-				{
-					case Core.Enums.FunctionPathTypeEnum.Function:
-						return CallFunction<T>(function, input);
-					case Core.Enums.FunctionPathTypeEnum.HTTP:
-						throw new NotImplementedException();
-					case Core.Enums.FunctionPathTypeEnum.HTTPS:
-						throw new NotImplementedException();
-					default:
-						throw new ArgumentException();
-				}
-			}
-			catch
-			{
-				throw;
-			}
-		}
-
-		private T CallFunction<T>(Core.Models.Function.Function function, JsonTranslation input)
+		public async Task<T> Call<T>(Core.Models.Function.Function function, string input)
+			=> throw new NotImplementedException();
+		private T CallFunction<T>(Core.Models.Function.Function function, params object[] input)
 		{
 			var functionPath = function.CallPath.GetPath();
 			Assembly assembly;
@@ -50,9 +26,27 @@ namespace Function
 			return ConvertType<T>(obj.GetType().GetMethod(function.Name).Invoke(obj, null));
 		}
 
-		public Task<T> Call<T>(Core.Models.Function.Function function, params object[] parameters)
+		public async Task<T> Call<T>(Core.Models.Function.Function function, params object[] parameters)
 		{
-			throw new NotImplementedException();
+			var functionType = function.CallPath.GetFunctionPathType();
+			try
+			{
+				switch (functionType)
+				{
+					case Core.Enums.FunctionPathTypeEnum.Function:
+						return CallFunction<T>(function, parameters);
+					case Core.Enums.FunctionPathTypeEnum.HTTP:
+						throw new NotImplementedException();
+					case Core.Enums.FunctionPathTypeEnum.HTTPS:
+						throw new NotImplementedException();
+					default:
+						throw new ArgumentException();
+				}
+			}
+			catch
+			{
+				throw;
+			}
 		}
 
 		private T ConvertType<T>(object input)

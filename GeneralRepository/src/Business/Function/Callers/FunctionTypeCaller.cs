@@ -11,11 +11,6 @@ namespace Function.Callers
 			throw new System.NotImplementedException();
 		}
 
-		public Task<T> Call<T>(Core.Models.Function.Function function, JsonTranslation input)
-		{
-			throw new System.NotImplementedException();
-		}
-
 		public Task<T> Call<T>(Core.Models.Function.Function function, params object[] parameters)
 		{
 			throw new System.NotImplementedException();

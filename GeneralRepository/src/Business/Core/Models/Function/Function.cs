@@ -6,8 +6,8 @@ namespace Core.Models.Function
 	public class Function : Model
 	{
 		public string Name { get; set; }
-		public Field ReturnType { get; set; }
-		public IEnumerable<Parameter> Parameters { get; set; }
+		public StructureDefinition ReturnType { get; set; }
+		public IEnumerable<StructureDefinition> Parameters { get; set; }
 		public string CallPath { get; set; }
 	}
 }

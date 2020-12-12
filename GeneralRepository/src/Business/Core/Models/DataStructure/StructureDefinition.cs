@@ -9,6 +9,7 @@ namespace Core.Models.DataStructure
 	{
 		public string Name { get; set; }
 		public List<Field> Fields { get; set; }
+		public List<Validator> Validators { get; set; }
 
 		public string ToSampleJson() => $"{{\r\n\t{GetFieldsJson()}\r\n}}";
 
@@ -26,24 +27,25 @@ namespace Core.Models.DataStructure
 		{
 			switch (field.DataType)
 			{
-				case BasicDataTypeEnum.None:
+				case DataTypeEnum.Array:
+				case DataTypeEnum.Object:
 					return GetDefaultValueForComplexField(field);
-				case BasicDataTypeEnum.Booelan:
+				case DataTypeEnum.Booelan:
 					return $"\"{field.Name}\":false";
-				case BasicDataTypeEnum.Integer:
-				case BasicDataTypeEnum.Float:
+				case DataTypeEnum.Integer:
+				case DataTypeEnum.Float:
 					return $"\"{field.Name}\":0";
-				case BasicDataTypeEnum.String:
+				case DataTypeEnum.String:
 					return $"\"{field.Name}\":\"\"";
-				case BasicDataTypeEnum.DateTime:
+				case DataTypeEnum.DateTime:
 					return $"\"{field.Name}\":\"{DateTime.Now:O}\"";
-				case BasicDataTypeEnum.Date:
+				case DataTypeEnum.Date:
 					return $"\"{field.Name}\":\"{DateTime.Now:yyyyy/MM/dd}\"";
-				case BasicDataTypeEnum.Time:
+				case DataTypeEnum.Time:
 					return $"\"{field.Name}\":\"01:10\"";
-				case BasicDataTypeEnum.Binary:
+				case DataTypeEnum.Binary:
 					return $"\"{field.Name}\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==\"";
-				case BasicDataTypeEnum.GUID:
+				case DataTypeEnum.GUID:
 					return $"\"{field.Name}\":\"{Guid.NewGuid()}\"";
 				default:
 					return "";
@@ -53,9 +55,7 @@ namespace Core.Models.DataStructure
 		private string GetDefaultValueForComplexField(Field field)
 		{
 			var res = "";
-			if (field.RelationType == RelationTypeEnum.NoRelation)
-				throw new ArgumentException();
-			if (field.RelationType == RelationTypeEnum.OneToOne)
+			if (field.DataType == DataTypeEnum.Object)
 			{
 				var subFields = Fields.Where(m => m.FullName.StartsWith($"{field.FullName}."));
 				foreach (var subField in subFields)

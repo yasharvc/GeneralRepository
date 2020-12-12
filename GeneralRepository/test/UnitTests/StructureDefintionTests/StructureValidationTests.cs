@@ -293,6 +293,26 @@ namespace UnitTests.StructureDefintionTests
 			Assert.True(await structure.ValidateJsonStructure(new { city = "Tabriz", country="Iran" }));
 		}
 
+		[Fact]
+		public async void ValidateJsonStructure_WithTimeElementInStructureAndNotInsideJson_ShouldReturnFalse()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_time",
+						Name = "time",
+						DataType = DataTypeEnum.Time,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.False(await structure.ValidateJsonStructure(new { time = "yashar" }));
+		}
 		//Binary => Base64
 		//Time
 		//DateTime

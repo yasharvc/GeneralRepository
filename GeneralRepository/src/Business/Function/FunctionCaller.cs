@@ -1,6 +1,4 @@
-﻿using Core.Extensions;
-using Core.Models;
-using Function.Interfaces;
+﻿using Function.Interfaces;
 using System;
 using System.IO;
 using System.Reflection;

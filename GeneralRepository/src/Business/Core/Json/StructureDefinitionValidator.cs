@@ -72,6 +72,32 @@ namespace Core.Json
 				return CanConvertToGuid(prop.GetString());
 			else if (dataType == DataTypeEnum.Booelan)
 				return CanConvertToBoolean(prop.GetString());
+			else if (dataType == DataTypeEnum.String)
+				return true;
+			else if (dataType == DataTypeEnum.Float)
+			{
+				try
+				{
+					prop.GetDouble();
+					return true;
+				}
+				catch
+				{
+					return false;
+				}
+			}
+			else if (dataType == DataTypeEnum.Integer)
+			{
+				try
+				{
+					prop.GetInt64();
+					return true;
+				}
+				catch
+				{
+					return false;
+				}
+			}
 			return false;
 		}
 

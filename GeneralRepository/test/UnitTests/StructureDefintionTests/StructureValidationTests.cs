@@ -2,10 +2,8 @@
 using Core.Models.DataStructure;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
+using Core.Extensions;
 
 namespace UnitTests.StructureDefintionTests
 {
@@ -313,7 +311,66 @@ namespace UnitTests.StructureDefintionTests
 
 			Assert.False(await structure.ValidateJsonStructure(new { time = "yashar" }));
 		}
-		//Binary => Base64
+		[Fact]
+		public async void ValidateJsonStructure_WithTimeElementInStructureAndInsideJson_ShouldReturnTrue()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_time",
+						Name = "time",
+						DataType = DataTypeEnum.Time,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.True(await structure.ValidateJsonStructure(new { time = "12:30" }));
+		}
+		[Fact]
+		public async void ValidateJsonStructure_WithBase64ElementInStructureAndInsideJson_ShouldReturnTrue()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_binary",
+						Name = "binary",
+						DataType = DataTypeEnum.Binary,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.True(await structure.ValidateJsonStructure(new { binary = "123".ToBase64() }));
+		}
+		[Fact]
+		public async void ValidateJsonStructure_WithBase64ElementInStructureAndWrongDataInsideJson_ShouldReturnFalse()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_binary",
+						Name = "binary",
+						DataType = DataTypeEnum.Binary,
+						Nullable = false
+					}
+				}
+			};
+
+			Assert.False(await structure.ValidateJsonStructure(new { binary = "123" }));
+		}
 		//Time
 		//DateTime
 	}

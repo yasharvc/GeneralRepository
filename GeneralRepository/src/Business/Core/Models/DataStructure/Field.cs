@@ -1,5 +1,4 @@
 ﻿using Core.Enums;
-using System.Collections.Generic;
 
 namespace Core.Models.DataStructure
 {
@@ -7,9 +6,10 @@ namespace Core.Models.DataStructure
 	{
 		public DataTypeEnum DataType { get; set; }
 		public string Name { get; set; }
-		public string ParentPath { get; set; }
+		//public string ParentPath { get; set; }
 		public StructureDefinition Structure { get; set; }
+		public bool Nullable { get; set; } = true;
 
-		public string GetFullPath() => $"{ParentPath}.{Name}";
+		public bool IsDataTypeSimple() => DataType != DataTypeEnum.Object && DataType != DataTypeEnum.Array;
 	}
 }

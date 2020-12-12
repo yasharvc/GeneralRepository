@@ -41,7 +41,11 @@ namespace Core.Json
 				if (field.DataType == DataTypeEnum.Object)
 					errors.AddRange(await Validate(field.Structure, prop.GetRawText(), $"{parent}{field.Name}"));
 				else if (field.DataType == DataTypeEnum.Array)
-					throw new NotImplementedException();
+				{
+					var index = 0;
+					foreach (var item in prop.EnumerateArray())
+						errors.AddRange(await Validate(field.Structure, item.GetRawText(), $"{parent}{field.Name}[{index++}]"));
+				}
 			}
 			catch (KeyNotFoundException)
 			{

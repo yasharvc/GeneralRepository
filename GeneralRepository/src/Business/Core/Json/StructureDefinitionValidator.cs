@@ -11,6 +11,54 @@ namespace Core.Json
 {
 	public class StructureDefinitionValidator
 	{
+		public static async Task<object> GetValue(StructureDefinition structure,string jsonInput,string path)
+		{
+			var bytesOfJson = Encoding.UTF8.GetBytes(jsonInput);
+			var memory = new MemoryStream(bytesOfJson);
+			using (var document = await JsonDocument.ParseAsync(memory, new JsonDocumentOptions { AllowTrailingCommas = true }))
+			{
+				var element = document.RootElement;
+				var pathList = path.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+				foreach (var item in pathList)
+				{
+					try
+					{
+						element = element.GetProperty(item);
+					}
+					catch
+					{
+						return null;
+					}
+				}
+				
+				return CastToItsType(element);
+			}
+		}
+
+		private static object CastToItsType(JsonElement element)
+		{
+			switch (element.ValueKind)
+			{
+				case JsonValueKind.Object:
+				case JsonValueKind.Array:
+					throw new NotImplementedException();
+				case JsonValueKind.Undefined:
+				case JsonValueKind.Null:
+					return null;
+				case JsonValueKind.String:
+					return element.GetString();
+				case JsonValueKind.Number:
+					return element.GetDouble();
+				case JsonValueKind.True:
+					return true;
+				case JsonValueKind.False:
+					return false;
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
 		public static async Task<List<string>> Validate(StructureDefinition structure, string jsonInput)
 		=> await Validate(structure, jsonInput, "");
 
@@ -26,7 +74,6 @@ namespace Core.Json
 					await ValidateFieldByValue(root, field, errors, parent);
 			}
 			return errors;
-
 		}
 
 		private static async Task ValidateFieldByValue(JsonElement root, Field field, List<string> errors, string parent = "")

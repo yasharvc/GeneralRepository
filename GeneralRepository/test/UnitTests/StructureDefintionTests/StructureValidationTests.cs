@@ -373,5 +373,6 @@ namespace UnitTests.StructureDefintionTests
 		}
 		//Time
 		//DateTime
+		//Array
 	}
 }

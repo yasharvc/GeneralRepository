@@ -30,7 +30,24 @@ namespace Core.Services
 
 		private string DictionaryToJson(Dictionary<string, object> destJsonValues) => JsonSerializer.Serialize(destJsonValues);
 
-		private void AddToValueDictionary(Dictionary<string, object> destJsonValues, string toField, object value) => destJsonValues[toField] = value;
+		private void AddToValueDictionary(Dictionary<string, object> destJsonValues, string toField, object value)
+		{
+			var path = toField.Split('.');
+			if(path.Length > 0)
+			{
+				for (int i = 0; i < path.Length-1; i++)
+				{
+					string item = path[i];
+					destJsonValues[item] = new Dictionary<string, object>();
+					destJsonValues = destJsonValues[item] as Dictionary<string,object>;
+				}
+				destJsonValues[path[path.Length - 1]] = value;
+			}
+			else
+			{
+				destJsonValues[toField] = value;
+			}
+		}
 
 		public async Task<string> Map(object input)
 			=> await Map(JsonSerializer.Serialize(input));

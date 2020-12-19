@@ -19,6 +19,6 @@ namespace Core.Models.DataStructure
 		public async Task<bool> ValidateJsonStructure(object input) =>
 			await ValidateJsonStructure(JsonSerializer.Serialize(input));
 
-		public async Task<string> GetValue(string fullPath, string sourceJson) => await StructureDefinitionValidator.GetValue(this, sourceJson, fullPath);
+		public async Task<object> GetValue(string fullPath, string sourceJson) => await StructureDefinitionValidator.GetValue(this, sourceJson, fullPath);
 	}
 }

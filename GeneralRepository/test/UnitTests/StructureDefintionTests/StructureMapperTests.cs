@@ -4,6 +4,7 @@ using Core.Services;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -330,17 +331,21 @@ namespace UnitTests.StructureDefintionTests
 		public void JsonWriter_WithObject_ShouldCreateCorrectJson()
 		{
 			var writer = new Core.Services.JsonWriter();
-			writer.SetObjectValue("addr", new { city = "Tabriz" });
+			writer.SetValue("addr.city", "Tabriz");
+			writer.SetValue("addr.country", "Iran");
+			writer.SetValue("addr.zip", "+98");
 			var json = writer.ToJson();
 			var root = JsonDocument.Parse(json).RootElement;
 			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("city").GetString());
+			Assert.Equal("Iran", root.GetProperty("addr").GetProperty("country").GetString());
+			Assert.Equal("+98", root.GetProperty("addr").GetProperty("zip").GetString());
 		}
 		[Fact]
 		public void JsonWriter_WithObjectCorrectingValue_ShouldCreateCorrectJson()
 		{
 			var writer = new Core.Services.JsonWriter();
-			writer.SetObjectValue("addr", new { city = "XYZ" });
-			writer.SetObjectValue("addr", new { city = "Tabriz" });
+			writer.SetValue("addr.city", "XYZ");
+			writer.SetValue("addr.city", "Tabriz");
 			var json = writer.ToJson();
 			var root = JsonDocument.Parse(json).RootElement;
 			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("city").GetString());
@@ -350,10 +355,22 @@ namespace UnitTests.StructureDefintionTests
 		public void JsonWriter_WithNestedObject_ShouldCreateCorrectJson()
 		{
 			var writer = new Core.Services.JsonWriter();
-			writer.SetObjectValue("addr", new { area = new { city = "Tabriz" } });
+			writer.SetValue("addr.area.city", "Tabriz");
 			var json = writer.ToJson();
 			var root = JsonDocument.Parse(json).RootElement;
 			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("area").GetProperty("city").GetString());
+		}
+		[Fact]
+		public void JsonWriter_WithArray_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.AddItemToArray("items", new Core.Models.JsonValue { Name = "name", Value="\"Item1\""});
+			writer.AddItemToArray("items", new Core.Models.JsonValue { Name = "name", Value="\"Item2\""});
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal(2, root.GetProperty("items").GetArrayLength());
+			Assert.Equal("Item1", root.GetProperty("items").EnumerateArray().ToList().First().GetProperty("name").GetString());
+			Assert.Equal("Item2", root.GetProperty("items").EnumerateArray().ToList()[1].GetProperty("name").GetString());
 		}
 	}
 }

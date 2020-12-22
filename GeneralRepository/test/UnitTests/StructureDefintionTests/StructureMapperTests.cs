@@ -3,6 +3,8 @@ using Core.Models.DataStructure;
 using Core.Services;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using Xunit;
 
@@ -83,9 +85,7 @@ namespace UnitTests.StructureDefintionTests
 							{
 								new Field
 								{
-									Id = "city",
-									DataType= DataTypeEnum.String,
-									Name = "test_address_city",
+									Id = "test_address_city", DataType = DataTypeEnum.String, Name = "city",
 									Nullable=true
 								}
 							}
@@ -151,9 +151,9 @@ namespace UnitTests.StructureDefintionTests
 							{
 								new Field
 								{
-									Id = "city",
+									Id = "test_address_city",
 									DataType= DataTypeEnum.String,
-									Name = "test_address_city",
+									Name = "city",
 									Nullable=true
 								}
 							}
@@ -178,9 +178,9 @@ namespace UnitTests.StructureDefintionTests
 							{
 								new Field
 								{
-									Id = "city",
+									Id = "test_dest_city",
 									DataType= DataTypeEnum.String,
-									Name = "test_dest_city",
+									Name = "city",
 									Nullable=true
 								}
 							}
@@ -222,9 +222,9 @@ namespace UnitTests.StructureDefintionTests
 				{
 					new Field
 					{
-						Id = "test_address",
-						Name = "address",
-						DataType = DataTypeEnum.Object,
+						Id = "test_items",
+						Name = "items",
+						DataType = DataTypeEnum.Array,
 						Nullable = false,
 						Structure = new StructureDefinition
 						{
@@ -232,9 +232,16 @@ namespace UnitTests.StructureDefintionTests
 							{
 								new Field
 								{
-									Id = "city",
+									Id = "test_items_name",
 									DataType= DataTypeEnum.String,
-									Name = "test_address_city",
+									Name = "name",
+									Nullable=true
+								},
+								new Field
+								{
+									Id = "test_items_count",
+									DataType= DataTypeEnum.Integer,
+									Name = "count",
 									Nullable=true
 								}
 							}
@@ -251,7 +258,7 @@ namespace UnitTests.StructureDefintionTests
 					{
 						Id = "test_dest",
 						Name = "dest",
-						DataType = DataTypeEnum.Object,
+						DataType = DataTypeEnum.Array,
 						Nullable = false,
 						Structure = new StructureDefinition
 						{
@@ -259,9 +266,9 @@ namespace UnitTests.StructureDefintionTests
 							{
 								new Field
 								{
-									Id = "city",
-									DataType= DataTypeEnum.String,
-									Name = "test_dest_city",
+									Id = "test_dest_itemname",
+									DataType = DataTypeEnum.String,
+									Name = "itemName",
 									Nullable=true
 								}
 							}
@@ -279,31 +286,74 @@ namespace UnitTests.StructureDefintionTests
 					Mappings = new List<FieldMapping> {
 						new FieldMapping
 						{
-							FromField = "address.city",
-							ToField = "dest.city"
+							FromField = "items.name",
+							ToField = "dest.itemName"
 						}
 					}
 				}
 			};
 
-			var res = await mapper.Map(JsonConvert.SerializeObject(new { address = new { city = "Tabriz" } }));
+			var res = await mapper.Map(JsonConvert.SerializeObject(new { items = new[] { new { name = "First",count=3 }, new { name = "Second", count = 1 } } }));
 
 			var root = JsonDocument.Parse(res).RootElement;
 
-			Assert.Equal("Tabriz", root.GetProperty("dest").GetProperty("city").GetString());
+			Assert.Equal(2, root.GetProperty("dest").GetArrayLength());
 		}
 		[Fact]
 		public void DictionaryToJsonTest()
 		{
-			var dict = new Dictionary<string, object>
-			{
-				{ "address",new Dictionary<string,object>{
-					{"city","tabriz" },
-					{ "country","Iran"}
-				} }
-			};
-			var str = JsonConvert.SerializeObject(dict);
+			var dict = new Dictionary<string, object>();
+			dict["aa"] =  new { city = "SDF" };
+			dict["add"] = new object[] { new { name = "a" }, new { name = "b" } } ;
+			var str = System.Text.Json.JsonSerializer.Serialize(dict);
 			Assert.NotNull(str);
+		}
+		[Fact]
+		public void JsonWriter_WithSimpleString_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.SetValue("name", "Yashar");
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal("Yashar", root.GetProperty("name").GetString());
+		}
+		[Fact]
+		public void JsonWriter_WithSimpleInteger_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.SetValue("age", 34);
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal(34, root.GetProperty("age").GetInt32());
+		}
+		[Fact]
+		public void JsonWriter_WithObject_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.SetObjectValue("addr", new { city = "Tabriz" });
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("city").GetString());
+		}
+		[Fact]
+		public void JsonWriter_WithObjectCorrectingValue_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.SetObjectValue("addr", new { city = "XYZ" });
+			writer.SetObjectValue("addr", new { city = "Tabriz" });
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("city").GetString());
+		}
+
+		[Fact]
+		public void JsonWriter_WithNestedObject_ShouldCreateCorrectJson()
+		{
+			var writer = new Core.Services.JsonWriter();
+			writer.SetObjectValue("addr", new { area = new { city = "Tabriz" } });
+			var json = writer.ToJson();
+			var root = JsonDocument.Parse(json).RootElement;
+			Assert.Equal("Tabriz", root.GetProperty("addr").GetProperty("area").GetProperty("city").GetString());
 		}
 	}
 }

@@ -1,9 +1,8 @@
 ﻿using Core.Enums;
+using Core.Extensions;
 using Core.Models.DataStructure;
-using System;
 using System.Collections.Generic;
 using Xunit;
-using Core.Extensions;
 
 namespace UnitTests.StructureDefintionTests
 {
@@ -271,20 +270,8 @@ namespace UnitTests.StructureDefintionTests
 				Id = "test",
 				Fields = new List<Field>
 				{
-					new Field
-					{
-						Id = "test_city",
-						Name = "city",
-						DataType = DataTypeEnum.String,
-						Nullable = false
-					},
-					new Field
-					{
-						Id = "test_country",
-						Name = "country",
-						DataType = DataTypeEnum.String,
-						Nullable = false
-					}
+					Field.NotNullString("test_city","city"),
+					Field.NotNullString("test_country","country")
 				}
 			};
 

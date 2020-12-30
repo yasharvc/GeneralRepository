@@ -1,8 +1,10 @@
 ﻿using Core.Enums;
+using Core.Exceptions.Application;
 using Core.Models.DataStructure;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ namespace Core.Json
 		{
 			var bytesOfJson = Encoding.UTF8.GetBytes(jsonInput);
 			var memory = new MemoryStream(bytesOfJson);
+			Field field = null;
 			using (var document = await JsonDocument.ParseAsync(memory, new JsonDocumentOptions { AllowTrailingCommas = true }))
 			{
 				var element = document.RootElement;
@@ -22,13 +25,21 @@ namespace Core.Json
 
 				foreach (var item in pathList)
 				{
+					if (field == null)
+						field = structure.Fields.SingleOrDefault(m => m.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
+					else
+						field = field.Structure.Fields.SingleOrDefault(m => m.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
+					if (field == null)
+						throw new InvalidJsonPathException();
 					try
 					{
 						element = element.GetProperty(item);
 					}
-					catch
+					catch(Exception)
 					{
-						return null;
+						if(field.Nullable)
+							return null;
+						throw new InvalidJsonStringInputException();
 					}
 				}
 				

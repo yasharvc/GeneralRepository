@@ -33,5 +33,26 @@ namespace Core.Models.DataStructure
 				Nullable = true
 			};
 		}
+
+		public static Field NotNullInteger(string id,string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Integer,
+				Nullable = false
+			};
+		}
+		public static Field NullableInteger(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Integer,
+				Nullable = true
+			};
+		}
 	}
 }

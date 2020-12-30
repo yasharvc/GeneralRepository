@@ -1,7 +1,9 @@
 ﻿using Core.Enums;
+using Core.Exceptions.Application;
 using Core.Extensions;
 using Core.Models.DataStructure;
 using System.Collections.Generic;
+using System.Text.Json;
 using Xunit;
 
 namespace UnitTests.StructureDefintionTests
@@ -361,5 +363,20 @@ namespace UnitTests.StructureDefintionTests
 		//Time
 		//DateTime
 		//Array
+
+		[Fact]
+		public async void GetValue_WithNotNullableString_ShouldThrowException()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					Field.NotNullString("name","name")
+				}
+			};
+
+			await Assert.ThrowsAsync<InvalidJsonStringInputException>(async () => await structure.GetValue("name", JsonSerializer.Serialize(new { age = 34 })));
+		}
 	}
 }

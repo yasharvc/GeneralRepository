@@ -393,5 +393,38 @@ namespace UnitTests.StructureDefintionTests
 
 			Assert.Null(await structure.GetValue("name", JsonSerializer.Serialize(new { age = 34 })));
 		}
+
+		[Fact]
+		public async void GetValue_WithObjectInsideStructureAndRightJson_ShouldReturnItemsValues()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					new Field
+					{
+						Id = "test_address",
+						Name = "address",
+						DataType = DataTypeEnum.Object,
+						Nullable = false,
+						Structure=new StructureDefinition
+						{
+							Id = "address",
+							Name = "address",
+							Fields = new List<Field>
+							{
+								Field.NotNullString("test_city","city"),
+								Field.NotNullString("test_country","country")
+							}
+						}
+					}
+				}
+			};
+
+			var city = await structure.GetValue("address.city",JsonSerializer.Serialize(new { address = new { city = "Tabriz", country = "Iran" } }));
+
+			Assert.Equal("Tabriz", city);
+		}
 	}
 }

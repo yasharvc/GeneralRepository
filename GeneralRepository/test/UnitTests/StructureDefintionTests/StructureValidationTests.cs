@@ -195,7 +195,7 @@ namespace UnitTests.StructureDefintionTests
 			Assert.False(await structure.ValidateJsonStructure(new { name = "Yashar", age = "gfh" }));
 		}
 		[Fact]
-		public async void ValidateJsonStructure_WithObjectInStructure_ShouldReturnTrue()
+		public async void ValidateJsonStructure_WithObjectInStructureAndWrongInput_ShouldReturnFalse()
 		{
 			var structure = new StructureDefinition
 			{
@@ -377,6 +377,21 @@ namespace UnitTests.StructureDefintionTests
 			};
 
 			await Assert.ThrowsAsync<InvalidJsonStringInputException>(async () => await structure.GetValue("name", JsonSerializer.Serialize(new { age = 34 })));
+		}
+
+		[Fact]
+		public async void GetValue_WithNullableString_ShouldReturnNull()
+		{
+			var structure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					Field.NullableString("name","name")
+				}
+			};
+
+			Assert.Null(await structure.GetValue("name", JsonSerializer.Serialize(new { age = 34 })));
 		}
 	}
 }

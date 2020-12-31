@@ -20,5 +20,19 @@ namespace Core.Models.DataStructure
 			await ValidateJsonStructure(JsonSerializer.Serialize(input));
 
 		public async Task<object> GetValue(string fullPath, string sourceJson) => await StructureDefinitionValidator.GetValue(this, sourceJson, fullPath);
+
+		public Field GetFieldByPath(string fromField)
+		{
+			Field res = null;
+			var arr = fromField.Split('.');
+			foreach (var item in arr)
+			{
+				if (res == null)
+					res = Fields.Single(m => m.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
+				else
+					res = res.Structure.Fields.Single(m => m.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
+			}
+			return res;
+		}
 	}
 }

@@ -8,6 +8,8 @@ namespace Core.Services
 	{
 		JsonValue Root = new JsonValue();
 
+		public JsonValue GetRoot() => Root;
+
 		public void SetValue(string path, string value)
 		{
 			CreatePath(path);
@@ -38,6 +40,23 @@ namespace Core.Services
 			CreatePath(path);
 			Root[path] = new JsonValue { Value = value.ToString() };
 		}
+
+		public void SetValue(string path, object value)
+		{
+			if(value.GetType() == typeof(string))
+				SetValue(path, (string)value);
+			else if(value.GetType() == typeof(bool))
+				SetValue(path, Convert.ToBoolean(value));
+			else if (value.GetType() == typeof(TimeSpan))
+				SetValue(path, (TimeSpan)value);
+			else if (value.GetType() == typeof(int))
+				SetValue(path, (int)value);
+			else if (value.GetType() == typeof(double))
+				SetValue(path, (double)value);
+			else
+				throw new InvalidCastException();
+		}
+
 		public void SetValue(string path, byte[] value)
 		{
 			CreatePath(path);
@@ -59,42 +78,7 @@ namespace Core.Services
 
 		public string ToJson()
 		{
-			//var res = "";
-			//foreach (var item in Root.SubItems)
-			//{
-			//	res += $"{(res.Length > 0 ? "," : "")}\"{item.Name}\":{MakeJson(item)}";
-			//}
-			//return $"{{{res}}}";
 			return Root.ToJson();
 		}
-
-		//private string MakeJson(JsonValue item)
-		//{
-		//	if(item.SubItems.Count > 0)
-		//	{
-		//		var res = "";
-		//		foreach (var subItem in item.SubItems)
-		//		{
-		//			res += $"{(res.Length > 0 ? "," : "")}\"{subItem.Name}\":{subItem.ToJson()}";
-		//		}
-		//		return $"{{{res}}}";
-		//	}
-		//	if (item.IsSimple())
-		//		return $"{item.ToJson()}";
-		//	else if (item.IsArray())
-		//		return $"[{GetArrayItems(item.ArrayValue)}]";
-		//	else
-		//		return null;
-		//}
-
-		//private string GetArrayItems(List<JsonValue> arrayValue)
-		//{
-		//	var res = "";
-		//	foreach (var item in arrayValue)
-		//	{
-		//		res += $"{(res.Length > 0 ? "," : "")}{item.ToJson()}";
-		//	}
-		//	return res;
-		//}
 	}
 }

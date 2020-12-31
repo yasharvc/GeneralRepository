@@ -20,17 +20,92 @@ namespace Core.Services
 
 		public async Task<string> Map(string sourceJson)
 		{
-			if (await SourceStructure.ValidateJsonStructure(sourceJson))
+			try
 			{
-				var destJsonValues = new Dictionary<string, object>();
-				foreach (var mapItem in Mapping.Mappings)
+				if (await SourceStructure.ValidateJsonStructure(sourceJson))
 				{
-					var value = await SourceStructure.GetValue(mapItem.FromField, sourceJson);
-					AddToValueDictionary(destJsonValues, mapItem.ToField, value);
+					JsonWriter jsonWriter = new JsonWriter();
+					var mem = new MemoryStream(Encoding.UTF8.GetBytes(sourceJson));
+					foreach (var mapItem in Mapping.Mappings)
+					{
+						await WriteToJson(mem,jsonWriter, mapItem);
+					}
+					return jsonWriter.ToJson();
 				}
-				return DictionaryToJson(destJsonValues);
+				throw new InvalidStructureException();
 			}
-			throw new InvalidStructureException();
+			catch {
+				throw new InvalidStructureException();
+			}
+		}
+
+		private async Task WriteToJson(MemoryStream jsonStream, JsonWriter jsonWriter, FieldMapping mapItem)
+		{
+			var fromValue = await GetValue(jsonStream, SourceStructure, mapItem.FromField);
+			var fromField = SourceStructure.GetFieldByPath(mapItem.FromField);
+			var toField = DestinationStructure.GetFieldByPath(mapItem.ToField);
+			if (fromField.IsDataTypeSimple() && toField.IsDataTypeSimple())
+				Write(jsonWriter, fromValue, toField, mapItem.ToField);
+		}
+
+		private void Write(JsonWriter jsonWriter, JsonElement fromValue, Field field, string path)
+		{
+			switch (field.DataType)
+			{
+				case DataTypeEnum.Booelan:
+					jsonWriter.SetValue(path, fromValue.GetBoolean());
+					break;
+				case DataTypeEnum.Integer:
+				case DataTypeEnum.Float:
+					jsonWriter.SetValue(path, fromValue.GetDouble());
+					break;
+				case DataTypeEnum.String:
+				case DataTypeEnum.GUID:
+					jsonWriter.SetValue(path, fromValue.GetString());
+					break;
+				case DataTypeEnum.DateTime:
+				case DataTypeEnum.Date:
+					jsonWriter.SetValue(path, fromValue.GetDateTime());
+					break;
+				case DataTypeEnum.Time:
+					var val = fromValue.GetDateTime();
+					jsonWriter.SetValue(path, new TimeSpan(val.Hour, val.Minute, val.Second));
+					break;
+				case DataTypeEnum.Binary:
+					jsonWriter.SetValue(path, fromValue.GetBytesFromBase64());
+					break;
+				case DataTypeEnum.Void:
+				case DataTypeEnum.Array:
+					break;
+				case DataTypeEnum.Object:
+					break;
+				default:
+					break;
+			}
+		}
+
+		private async Task<JsonElement> GetValue(Stream jsonStream, StructureDefinition structure, string fieldName)
+		{
+			using(JsonDocument doc = await JsonDocument.ParseAsync(jsonStream))
+			{
+				var element = doc.RootElement;
+
+				var pathItems = fieldName.Split('.');
+
+				Field field = null;
+				foreach (var item in pathItems)
+				{
+					if (field == null)
+						field = structure.Fields.Single(m => m.Name.Equals(item));
+					else
+						field = field.Structure.Fields.Single(m => m.Name.Equals(item));
+					if (field == null)
+						throw new InvalidStructureException();
+					element = element.GetProperty(item);
+				}
+
+				return element;
+			}
 		}
 
 		private void AddElement(Utf8JsonWriter jsonWriter, string toField, object value)
@@ -62,36 +137,7 @@ namespace Core.Services
 
 		private void WriteJsonValue(Utf8JsonWriter jsonWriter, Field field, object value)
 		{
-			switch (field.DataType)
-			{
-				case DataTypeEnum.Booelan:
-					jsonWriter.WriteBoolean(field.Name, Convert.ToBoolean(value));
-					break;
-				case DataTypeEnum.Integer:
-				case DataTypeEnum.Float:
-					jsonWriter.WriteNumber(field.Name, Convert.ToDouble(value));
-					break;
-				case DataTypeEnum.String:
-				case DataTypeEnum.GUID:
-					jsonWriter.WriteString(field.Name, Convert.ToString(value));
-					break;
-				case DataTypeEnum.DateTime:
-				case DataTypeEnum.Date:
-					jsonWriter.WriteString(field.Name, Convert.ToDateTime(value));
-					break;
-				case DataTypeEnum.Time:
-					jsonWriter.WriteString(field.Name, ((TimeSpan)value).ToString());
-					break;
-				case DataTypeEnum.Binary:
-					jsonWriter.WriteBase64String(field.Name, value.ToString().ToBytes());
-					break;
-				case DataTypeEnum.Void:
-				case DataTypeEnum.Object:
-				case DataTypeEnum.Array:
-					break;
-				default:
-					break;
-			}
+			
 		}
 
 		private List<Field> GetFieldFrom(StructureDefinition structure, string fieldName)

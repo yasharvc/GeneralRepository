@@ -305,9 +305,11 @@ namespace UnitTests.StructureDefintionTests
 		[Fact]
 		public void DictionaryToJsonTest()
 		{
-			var dict = new Dictionary<string, object>();
-			dict["aa"] =  new { city = "SDF" };
-			dict["add"] = new object[] { new { name = "a" }, new { name = "b" } } ;
+			var dict = new Dictionary<string, object>
+			{
+				["aa"] = new { city = "SDF" },
+				["add"] = new object[] { new { name = "a" }, new { name = "b" } }
+			};
 			var str = System.Text.Json.JsonSerializer.Serialize(dict);
 			Assert.NotNull(str);
 		}

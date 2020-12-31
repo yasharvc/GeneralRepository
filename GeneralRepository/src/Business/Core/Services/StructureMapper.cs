@@ -1,4 +1,5 @@
-﻿using Core.Extensions;
+﻿using Core.Exceptions.Application;
+using Core.Extensions;
 using Core.Models.DataStructure;
 using System;
 using System.Collections.Generic;
@@ -16,9 +17,20 @@ namespace Core.Services
 		public StructureMapping Mapping { get; set; }
 
 		public async Task<string> Map(string sourceJson) {
-			var jsonWriter = new JsonWriter();
-			ExtractValue(SourceStructure, Mapping, await JsonDocument.ParseAsync(new MemoryStream(sourceJson.ToBytes())), jsonWriter);
-			return jsonWriter.ToJson();
+			try
+			{
+				if (await SourceStructure.ValidateJsonStructure(sourceJson))
+				{
+					var jsonWriter = new JsonWriter();
+					ExtractValue(SourceStructure, Mapping, await JsonDocument.ParseAsync(new MemoryStream(sourceJson.ToBytes())), jsonWriter);
+					return jsonWriter.ToJson();
+				}
+				throw new InvalidStructureException();
+			}
+			catch
+			{
+				throw new InvalidStructureException();
+			}
 		}
 
 		void ExtractValue(StructureDefinition fromStructure, StructureMapping mapping, JsonDocument doc, JsonWriter jsonWriter, Field fromField = null)

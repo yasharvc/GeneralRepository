@@ -6,7 +6,7 @@ namespace Core.Services
 {
 	public partial class JsonWriter
 	{
-		JsonValue Root = new JsonValue();
+		readonly JsonValue Root = new JsonValue();
 
 		public JsonValue GetRoot() => Root;
 

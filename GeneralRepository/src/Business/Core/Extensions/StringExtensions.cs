@@ -16,6 +16,7 @@ namespace Core.Extensions
 		public static bool EqualsIgnoreCase(this string a, string value) => a.Equals(value, StringComparison.OrdinalIgnoreCase);
 
 		public static bool StartsWithIgnoreCase(this string a, string value) => a.StartsWith(value, StringComparison.OrdinalIgnoreCase);
+
 		public static bool EndsWithIgnoreCase(this string a, string value) => a.EndsWith(value, StringComparison.OrdinalIgnoreCase);
 
 	}

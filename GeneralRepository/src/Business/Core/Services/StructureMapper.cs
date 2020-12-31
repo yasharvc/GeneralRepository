@@ -122,7 +122,11 @@ namespace Core.Services
 			=> await Map(JsonSerializer.Serialize(input));
 
 		public async Task<T> Map<T>(string sourceJson)
-			=> JsonSerializer.Deserialize<T>(await Map(sourceJson));
+			=> (T)JsonSerializer.Deserialize(await Map(sourceJson), typeof(T),
+				new JsonSerializerOptions
+				{
+					PropertyNameCaseInsensitive = true
+				});
 
 		public async Task<T> Map<T>(object input)
 			=> await Map<T>(JsonSerializer.Serialize(input));

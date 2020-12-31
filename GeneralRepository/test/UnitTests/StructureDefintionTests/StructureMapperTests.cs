@@ -528,6 +528,181 @@ namespace UnitTests.StructureDefintionTests
 			Assert.NotNull(res);
 		}
 
+		class test
+		{
+			public string id { get; set; }
+			public string Ad { get; set; }
+			public address Addr { get; set; }
+			public List<order> Dest { get; set; }
+
+		}
+
+		class address
+		{
+			public string City { get; set; }
+		}
+
+		class order
+		{
+			public string ItemName { get; set; }
+			public int ItemCount { get; set; }
+		}
+
+		[Fact]
+		public async void Map_WithObjectStructure_ShouldCastToObject()
+		{
+			var json = System.Text.Json.JsonSerializer.Serialize(new
+			{
+				name = "Yashar",
+				age = 34,
+				address = new
+				{
+					country = "Iran",
+					city = "Tabriz"
+				},
+				items = new[] { new { name = "First", count = 3 }, new { name = "Second", count = 1 } }
+			});
+
+			var fromStructure = new StructureDefinition
+			{
+				Id = "test",
+				Fields = new List<Field>
+				{
+					Field.NotNullString("name","name"),
+					Field.NotNullInteger("age","age"),
+					new Field
+					{
+						Id = "test_address",
+						Name = "address",
+						DataType = DataTypeEnum.Object,
+						Nullable = false,
+						Structure = new StructureDefinition
+						{
+							Fields = new List<Field>
+							{
+								Field.NullableString("test_address_city","city"),
+								Field.NullableString("test_address_country","country")
+							}
+						}
+					},
+					new Field
+					{
+						Id = "test_items",
+						Name = "items",
+						DataType = DataTypeEnum.Array,
+						Nullable = false,
+						Structure = new StructureDefinition
+						{
+							Fields = new List<Field>
+							{
+								new Field
+								{
+									Id = "test_items_name",
+									DataType= DataTypeEnum.String,
+									Name = "name",
+									Nullable=true
+								},
+								new Field
+								{
+									Id = "test_items_count",
+									DataType= DataTypeEnum.Integer,
+									Name = "count",
+									Nullable=true
+								}
+							}
+						}
+					}
+				}
+			};
+			var toStructure = new StructureDefinition
+			{
+				Id = "testTo",
+				Fields = new List<Field>
+				{
+					Field.NotNullString("test_dest","name"),
+					Field.NotNullString("test_dest","ad"),
+					new Field
+					{
+						Id = "test_address",
+						Name = "address",
+						DataType = DataTypeEnum.Object,
+						Nullable = false,
+						Structure = new StructureDefinition
+						{
+							Fields = new List<Field>
+							{
+								Field.NullableString("test_address_city","city")
+							}
+						}
+					},
+					new Field
+					{
+						Id = "test_dest",
+						Name = "dest",
+						DataType = DataTypeEnum.Array,
+						Nullable = false,
+						Structure = new StructureDefinition
+						{
+							Fields = new List<Field>
+							{
+								new Field
+								{
+									Id = "test_dest_itemname",
+									DataType = DataTypeEnum.String,
+									Name = "itemName",
+									Nullable=true
+								},
+								Field.NotNullInteger("itemCount","itemCount")
+							}
+						}
+					}
+				}
+			};
+
+			var mapping = new StructureMapping
+			{
+				Mappings = new List<FieldMapping>
+				{
+					new FieldMapping
+					{
+						FromField = "name",
+						ToField = "ad"
+					},
+					new FieldMapping
+					{
+						FromField = "address.city",
+						ToField = "addr.city"
+					},
+					new FieldMapping
+					{
+						FromField = "name",
+						ToField = "id"
+					},
+					new FieldMapping
+					{
+						FromField = "items.name",
+						ToField = "dest.itemName"
+					},
+					new FieldMapping
+					{
+						FromField = "items.count",
+						ToField = "dest.itemCount"
+					}
+				}
+			};
+			StructureMapper mapper = new StructureMapper
+			{
+				DestinationStructure = toStructure,
+				SourceStructure = fromStructure,
+				Mapping = mapping
+			};
+			var res = await mapper.Map<test>(json);
+
+			Assert.Equal("Yashar", res.id);
+			Assert.Equal("Yashar", res.Ad);
+			Assert.Equal(2, res.Dest.Count);
+			Assert.Equal("Tabriz", res.Addr.City);
+		}
 		
 	}
 }

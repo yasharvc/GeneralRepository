@@ -1,12 +1,9 @@
-﻿using Core.Enums;
-using Core.Exceptions.Application;
-using Core.Extensions;
+﻿using Core.Extensions;
 using Core.Models.DataStructure;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -18,180 +15,95 @@ namespace Core.Services
 		public StructureDefinition DestinationStructure { get; set; }
 		public StructureMapping Mapping { get; set; }
 
-		public async Task<string> Map(string sourceJson)
+		public async Task<string> Map(string sourceJson) {
+			var jsonWriter = new JsonWriter();
+			ExtractValue(SourceStructure, Mapping, await JsonDocument.ParseAsync(new MemoryStream(sourceJson.ToBytes())), jsonWriter);
+			return jsonWriter.ToJson();
+		}
+
+		void ExtractValue(StructureDefinition fromStructure, StructureMapping mapping, JsonDocument doc, JsonWriter jsonWriter, Field fromField = null)
 		{
-			try
+			foreach (var element in doc.RootElement.EnumerateObject())
 			{
-				if (await SourceStructure.ValidateJsonStructure(sourceJson))
+				if (mapping.Mappings.Any(m => m.FromField.StartsWithIgnoreCase(element.Name)))
 				{
-					JsonWriter jsonWriter = new JsonWriter();
-					var mem = new MemoryStream(Encoding.UTF8.GetBytes(sourceJson));
-					foreach (var mapItem in Mapping.Mappings)
+					var itemsStartsWithElementName = mapping.Mappings.Where(m => m.FromField.StartsWithIgnoreCase(element.Name));
+					if (element.Value.IsSimpleType())
 					{
-						await WriteToJson(mem,jsonWriter, mapItem);
+						fromField = (fromField?.Structure ?? fromStructure).Fields.SingleOrDefault(m => m.Name.EqualsIgnoreCase(element.Name));
+						if (fromField == null)
+							throw new Exception();
+						GetSimpleProperty(jsonWriter, fromField, element, itemsStartsWithElementName);
 					}
-					return jsonWriter.ToJson();
-				}
-				throw new InvalidStructureException();
-			}
-			catch {
-				throw new InvalidStructureException();
-			}
-		}
-
-		private async Task WriteToJson(MemoryStream jsonStream, JsonWriter jsonWriter, FieldMapping mapItem)
-		{
-			var fromValue = await GetValue(jsonStream, SourceStructure, mapItem.FromField);
-			var fromField = SourceStructure.GetFieldByPath(mapItem.FromField);
-			var toField = DestinationStructure.GetFieldByPath(mapItem.ToField);
-			if (fromField.IsDataTypeSimple() && toField.IsDataTypeSimple())
-				Write(jsonWriter, fromValue, toField, mapItem.ToField);
-		}
-
-		private void Write(JsonWriter jsonWriter, JsonElement fromValue, Field field, string path)
-		{
-			switch (field.DataType)
-			{
-				case DataTypeEnum.Booelan:
-					jsonWriter.SetValue(path, fromValue.GetBoolean());
-					break;
-				case DataTypeEnum.Integer:
-				case DataTypeEnum.Float:
-					jsonWriter.SetValue(path, fromValue.GetDouble());
-					break;
-				case DataTypeEnum.String:
-				case DataTypeEnum.GUID:
-					jsonWriter.SetValue(path, fromValue.GetString());
-					break;
-				case DataTypeEnum.DateTime:
-				case DataTypeEnum.Date:
-					jsonWriter.SetValue(path, fromValue.GetDateTime());
-					break;
-				case DataTypeEnum.Time:
-					var val = fromValue.GetDateTime();
-					jsonWriter.SetValue(path, new TimeSpan(val.Hour, val.Minute, val.Second));
-					break;
-				case DataTypeEnum.Binary:
-					jsonWriter.SetValue(path, fromValue.GetBytesFromBase64());
-					break;
-				case DataTypeEnum.Void:
-				case DataTypeEnum.Array:
-					break;
-				case DataTypeEnum.Object:
-					break;
-				default:
-					break;
-			}
-		}
-
-		private async Task<JsonElement> GetValue(Stream jsonStream, StructureDefinition structure, string fieldName)
-		{
-			using(JsonDocument doc = await JsonDocument.ParseAsync(jsonStream))
-			{
-				var element = doc.RootElement;
-
-				var pathItems = fieldName.Split('.');
-
-				Field field = null;
-				foreach (var item in pathItems)
-				{
-					if (field == null)
-						field = structure.Fields.Single(m => m.Name.Equals(item));
-					else
-						field = field.Structure.Fields.Single(m => m.Name.Equals(item));
-					if (field == null)
-						throw new InvalidStructureException();
-					element = element.GetProperty(item);
-				}
-
-				return element;
-			}
-		}
-
-		private void AddElement(Utf8JsonWriter jsonWriter, string toField, object value)
-		{
-			List<Field> fieldsPath = GetFieldFrom(DestinationStructure, toField);
-			if(fieldsPath.Count == 1)
-			{
-				WriteJsonValue(jsonWriter, fieldsPath.First(), value);
-			}else if(fieldsPath.Count > 1){
-				for (int i = 0; i < fieldsPath.Count - 1; i++)
-				{
-					var field = fieldsPath[i];
-					if(field.DataType == DataTypeEnum.Object)
+					else if (element.Value.ValueKind == JsonValueKind.Object)
 					{
-						jsonWriter.WriteStartObject(field.Name);
+						fromField = (fromField?.Structure ?? fromStructure).Fields.SingleOrDefault(m => m.Name.EqualsIgnoreCase(element.Name));
+						if (fromField == null)
+							throw new Exception();
+						GetObjectProperty(mapping, jsonWriter, fromField, element);
 					}
-				}
-				WriteJsonValue(jsonWriter, fieldsPath.Last(), value);
-				for (int i = 0; i < fieldsPath.Count - 1; i++)
-				{
-					var field = fieldsPath[i];
-					if (field.DataType == DataTypeEnum.Object)
+					else if (element.Value.ValueKind == JsonValueKind.Array)
 					{
-						jsonWriter.WriteEndObject();
+						fromField = (fromField?.Structure ?? fromStructure).Fields.SingleOrDefault(m => m.Name.EqualsIgnoreCase(element.Name));
+						if (fromField == null)
+							fromField = fromStructure.Fields.SingleOrDefault(m => m.Name.EqualsIgnoreCase(element.Name));
+						if (fromField == null)
+							throw new Exception();
+						GetArrayProerties(mapping, jsonWriter, fromField, element);
 					}
 				}
 			}
 		}
 
-		private void WriteJsonValue(Utf8JsonWriter jsonWriter, Field field, object value)
+		void GetObjectProperty(StructureMapping mapping, JsonWriter jsonWriter, Field fromField, JsonProperty element)
 		{
-			
+			StructureMapping temp = GoOneLevelDeeper(mapping);
+			ExtractValue(fromField.Structure, temp, JsonDocument.Parse(element.Value.GetRawText()),
+				jsonWriter, fromField);
 		}
 
-		private List<Field> GetFieldFrom(StructureDefinition structure, string fieldName)
+		void GetSimpleProperty(JsonWriter jsonWriter, Field fromField, JsonProperty element, IEnumerable<FieldMapping> itemsStartsWithElementName)
 		{
-			var path = fieldName.Split('.');
-			var res = new List<Field>();
-			Field field = null;
-			if (path.Length > 0)
+			foreach (var item in itemsStartsWithElementName)
 			{
-				for (int i = 0; i < path.Length; i++)
-				{
-					string item = path[i];
-					if (i == 0)
-						field = structure.Fields.Single(m => m.Name == item);
-					else
-						field = field.Structure.Fields.Single(m => m.Name == item);
-					res.Add(field);
-				}
+				jsonWriter.SetValue(item.ToField, element.Value.Cast(fromField));
 			}
-			return res;
 		}
 
-		private string DictionaryToJson(Dictionary<string, object> destJsonValues) => JsonSerializer.Serialize(destJsonValues);
-
-		private void AddToValueDictionary(Dictionary<string, object> destJsonValues, string toField, object value)
+		void GetArrayProerties(StructureMapping mapping, JsonWriter jsonWriter, Field fromField, JsonProperty element)
 		{
-			var path = toField.Split('.');
-			Field field = null;
-			if(path.Length > 0)
+			var temp = new StructureMapping
 			{
-				for (int i = 0; i < path.Length-1; i++)
+				Mappings = mapping.Mappings.Where(m => m.FromField.StartsWithIgnoreCase(element.Name)).ToList()
+			};
+			foreach (var item in element.Value.EnumerateArray())
+			{
+				var tempJsonWriter = new JsonWriter();
+				var doc = JsonDocument.Parse(item.GetRawText());
+				ExtractValue(fromField.Structure, GoOneLevelDeeper(temp), doc, tempJsonWriter, fromField);
+				var itemWithoutName = tempJsonWriter.GetRoot().SubItems[0];
+				itemWithoutName.Name = "";
+				jsonWriter.AddItemToArray(temp.Mappings.First().ToField.Split('.')[0], itemWithoutName);
+			}
+		}
+
+		static StructureMapping GoOneLevelDeeper(StructureMapping mapping)
+		{
+			var temp = new StructureMapping();
+			foreach (var item in mapping.Mappings)
+			{
+				var from = item.FromField.Split('.');
+				if (from.Length > 1)
 				{
-					string item = path[i];
-					if (i == 0)
-						field = DestinationStructure.Fields.Single(m => m.Name == item);
-					else
-						field = field.Structure.Fields.Single(m => m.Name == item);
-					if (field.DataType == DataTypeEnum.Object)
+					temp.Mappings.Add(new FieldMapping
 					{
-						destJsonValues[item] = new Dictionary<string, object>();
-						destJsonValues = destJsonValues[item] as Dictionary<string, object>;
-					}
-					else if(field.DataType == DataTypeEnum.Array)
-					{
-						destJsonValues[item] = new Dictionary<string, object[]>();
-						//destJsonValues = (Dictionary<string, object>)destJsonValues[item];
-					}
+						ToField = item.ToField,
+						FromField = string.Join(".", from.Skip(1))
+					});
 				}
-				destJsonValues[path[path.Length - 1]] = value;
 			}
-			else
-			{
-				destJsonValues[toField] = value;
-			}
+
+			return temp;
 		}
 
 		public async Task<string> Map(object input)

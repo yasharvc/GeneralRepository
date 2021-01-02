@@ -63,6 +63,8 @@ namespace Core.Models.DataStructure
 		{
 			if (prop.PropertyType == typeof(string))
 				structureDefinition.Fields.Add(Field.NotNullString($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(long))
+				structureDefinition.Fields.Add(Field.NotNullInteger($"{type.Name}_{prop.Name}", prop.Name));
 		}
 	}
 }

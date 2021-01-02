@@ -4,9 +4,54 @@ namespace Core.Models.DataStructure
 {
 	public class Field : Model
 	{
-		public BasicDataTypeEnum DataType { get; set; }
-		public RelationTypeEnum RelationType { get; set; }
+		public DataTypeEnum DataType { get; set; }
 		public string Name { get; set; }
-		public string FullName { get; set; }//tbl1.items.name => items is a array [1-n] for tb1 and each of them has name
+		public StructureDefinition Structure { get; set; }
+		public bool Nullable { get; set; } = true;
+
+		public bool IsDataTypeSimple() => DataType != DataTypeEnum.Object && DataType != DataTypeEnum.Array;
+
+		public static Field NotNullString(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.String,
+				Nullable = false
+			};
+		}
+
+		public static Field NullableString(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.String,
+				Nullable = true
+			};
+		}
+
+		public static Field NotNullInteger(string id,string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Integer,
+				Nullable = false
+			};
+		}
+		public static Field NullableInteger(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Integer,
+				Nullable = true
+			};
+		}
 	}
 }

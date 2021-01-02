@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.Json;
 using Xunit;
 
-namespace UnitTests.StructureDefintionTests
+namespace UnitTests.StructureDefinitionTests
 {
 	public class StructureMapperTests
 	{

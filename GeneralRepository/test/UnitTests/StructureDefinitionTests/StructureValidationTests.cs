@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
 
-namespace UnitTests.StructureDefintionTests
+namespace UnitTests.StructureDefinitionTests
 {
 	public class StructureValidationTests
 	{

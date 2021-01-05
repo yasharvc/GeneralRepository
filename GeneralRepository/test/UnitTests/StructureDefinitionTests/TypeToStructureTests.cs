@@ -13,6 +13,7 @@ namespace UnitTests.StructureDefinitionTests
 			public string Name { get; set; }
 			public int Age { get; set; }
 			public DateTime DOB { get; set; }
+			public TimeSpan Time { get; set; }
 		}
 
 		[Fact]
@@ -49,6 +50,19 @@ namespace UnitTests.StructureDefinitionTests
 			Field ageField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
 			Assert.Equal(nameOfField, ageField.Name);
 			Assert.Equal(DataTypeEnum.DateTime, ageField.DataType);
+		}
+
+		[Fact]
+		public void CTOR_WithTimeSpanInType_ShouldCreateField()
+		{
+			var structure = new StructureDefinition(typeof(TestClass));
+			const string nameOfField = nameof(TestClass.Time);
+
+			Assert.True(structure.Fields.Count > 0);
+			Assert.NotNull(structure.Fields.SingleOrDefault(m => m.Name.Equals(nameOfField)));
+			Field ageField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
+			Assert.Equal(nameOfField, ageField.Name);
+			Assert.Equal(DataTypeEnum.Time, ageField.DataType);
 		}
 	}
 }

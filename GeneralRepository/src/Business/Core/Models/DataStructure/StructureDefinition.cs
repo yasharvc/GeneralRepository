@@ -85,6 +85,8 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NotNullGuid($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(Guid?))
 				structureDefinition.Fields.Add(Field.NullableGuid($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(byte[]))
+				structureDefinition.Fields.Add(Field.NotNullBinary($"{type.Name}_{prop.Name}", prop.Name));
 		}
 	}
 }

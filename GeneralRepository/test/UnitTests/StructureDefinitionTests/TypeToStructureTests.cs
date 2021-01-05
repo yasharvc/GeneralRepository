@@ -17,6 +17,7 @@ namespace UnitTests.StructureDefinitionTests
 			public bool Married { get; set; }
 			public double Average { get; set; }
 			public Guid GUID { get; set; }
+			public byte[] File { get; set; }
 		}
 
 		[Fact]
@@ -102,6 +103,18 @@ namespace UnitTests.StructureDefinitionTests
 			Field ageField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
 			Assert.Equal(nameOfField, ageField.Name);
 			Assert.Equal(DataTypeEnum.GUID, ageField.DataType);
+		}
+		[Fact]
+		public void CTOR_WithByteArrayInType_ShouldCreateField()
+		{
+			var structure = new StructureDefinition(typeof(TestClass));
+			const string nameOfField = nameof(TestClass.File);
+
+			Assert.True(structure.Fields.Count > 0);
+			Assert.NotNull(structure.Fields.SingleOrDefault(m => m.Name.Equals(nameOfField)));
+			Field ageField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
+			Assert.Equal(nameOfField, ageField.Name);
+			Assert.Equal(DataTypeEnum.Binary, ageField.DataType);
 		}
 	}
 }

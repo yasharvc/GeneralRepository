@@ -156,5 +156,16 @@ namespace Core.Models.DataStructure
 				Nullable = true
 			};
 		}
+
+		public static Field NotNullBinary(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Binary,
+				Nullable = false
+			};
+		}
 	}
 }

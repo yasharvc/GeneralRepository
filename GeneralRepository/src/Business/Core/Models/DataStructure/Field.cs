@@ -94,5 +94,67 @@ namespace Core.Models.DataStructure
 				Nullable = true
 			};
 		}
+		public static Field NotNullBoolean(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Booelan,
+				Nullable = false
+			};
+		}
+		public static Field NullableBoolean(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Booelan,
+				Nullable = true
+			};
+		}
+
+		public static Field NotNullFloat(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Float,
+				Nullable = false
+			};
+		}
+		public static Field NullableFloat(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.Float,
+				Nullable = true
+			};
+		}
+
+		public static Field NotNullGuid(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.GUID,
+				Nullable = false
+			};
+		}
+		public static Field NullableGuid(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.GUID,
+				Nullable = true
+			};
+		}
 	}
 }

@@ -73,6 +73,18 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NotNullTime($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(TimeSpan?))
 				structureDefinition.Fields.Add(Field.NullableTime($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(bool))
+				structureDefinition.Fields.Add(Field.NotNullBoolean($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(bool?))
+				structureDefinition.Fields.Add(Field.NullableBoolean($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(float))
+				structureDefinition.Fields.Add(Field.NotNullFloat($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(double?) || prop.PropertyType == typeof(float?))
+				structureDefinition.Fields.Add(Field.NullableFloat($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(Guid))
+				structureDefinition.Fields.Add(Field.NotNullGuid($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(Guid?))
+				structureDefinition.Fields.Add(Field.NullableGuid($"{type.Name}_{prop.Name}", prop.Name));
 		}
 	}
 }

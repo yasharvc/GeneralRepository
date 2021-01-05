@@ -65,6 +65,10 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NotNullString($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(long))
 				structureDefinition.Fields.Add(Field.NotNullInteger($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType == typeof(DateTime))
+				structureDefinition.Fields.Add(Field.NotNullDateTime($"{type.Name}_{prop.Name}", prop.Name));
+			else if(prop.PropertyType == typeof(DateTime?))
+				structureDefinition.Fields.Add(Field.NullableDateTime($"{type.Name}_{prop.Name}", prop.Name));
 		}
 	}
 }

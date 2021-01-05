@@ -53,5 +53,25 @@ namespace Core.Models.DataStructure
 				Nullable = true
 			};
 		}
+		public static Field NotNullDateTime(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.DateTime,
+				Nullable = false
+			};
+		}
+		public static Field NullableDateTime(string id, string name)
+		{
+			return new Field
+			{
+				Id = id,
+				Name = name,
+				DataType = DataTypeEnum.DateTime,
+				Nullable = true
+			};
+		}
 	}
 }

@@ -3,6 +3,7 @@ using Core.Models.DataStructure;
 using System;
 using System.Linq;
 using Xunit;
+using Core.Extensions;
 
 namespace UnitTests.StructureDefinitionTests
 {
@@ -18,6 +19,12 @@ namespace UnitTests.StructureDefinitionTests
 			public double Average { get; set; }
 			public Guid GUID { get; set; }
 			public byte[] File { get; set; }
+			public InnerTestClass innerObject { get; set; }
+		}
+
+		class InnerTestClass
+		{
+			public string InnerName { get; set; }
 		}
 
 		[Fact]
@@ -112,9 +119,22 @@ namespace UnitTests.StructureDefinitionTests
 
 			Assert.True(structure.Fields.Count > 0);
 			Assert.NotNull(structure.Fields.SingleOrDefault(m => m.Name.Equals(nameOfField)));
-			Field ageField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
-			Assert.Equal(nameOfField, ageField.Name);
-			Assert.Equal(DataTypeEnum.Binary, ageField.DataType);
+			Field fileField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
+			Assert.Equal(nameOfField, fileField.Name);
+			Assert.Equal(DataTypeEnum.Binary, fileField.DataType);
+		}
+		[Fact]
+		public void CTOR_WithObjectInType_ShouldCreateField()
+		{
+			var structure = new StructureDefinition(typeof(TestClass));
+			const string nameOfField = nameof(TestClass.innerObject);
+
+			Assert.True(structure.Fields.Count > 0);
+			Assert.NotNull(structure.Fields.SingleOrDefault(m => m.Name.Equals(nameOfField)));
+			Field objectField = structure.Fields.Single(m => m.Name.Equals(nameOfField));
+			Assert.Equal(nameOfField, objectField.Name);
+			Assert.Equal(DataTypeEnum.Object, objectField.DataType);
+			Assert.Contains(objectField.Structure.Fields, m => m.Name.EqualsIgnoreCase(nameof(InnerTestClass.InnerName)));
 		}
 	}
 }

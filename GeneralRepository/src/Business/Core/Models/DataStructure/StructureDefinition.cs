@@ -67,7 +67,7 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NotNullInteger($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(DateTime))
 				structureDefinition.Fields.Add(Field.NotNullDateTime($"{type.Name}_{prop.Name}", prop.Name));
-			else if(prop.PropertyType == typeof(DateTime?))
+			else if (prop.PropertyType == typeof(DateTime?))
 				structureDefinition.Fields.Add(Field.NullableDateTime($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(TimeSpan))
 				structureDefinition.Fields.Add(Field.NotNullTime($"{type.Name}_{prop.Name}", prop.Name));
@@ -87,6 +87,20 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NullableGuid($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(byte[]))
 				structureDefinition.Fields.Add(Field.NotNullBinary($"{type.Name}_{prop.Name}", prop.Name));
+			else if (prop.PropertyType.IsClass)
+				structureDefinition.Fields.Add(MakeClassField(type, prop));
+		}
+
+		private Field MakeClassField(Type parent,PropertyInfo prop)
+		{
+			return new Field
+			{
+				Id = $"{parent.Name}_{prop.Name}",
+				Name=prop.Name,
+				DataType= Enums.DataTypeEnum.Object,
+				Nullable = false,
+				Structure = new StructureDefinition(prop.PropertyType)
+			};
 		}
 	}
 }

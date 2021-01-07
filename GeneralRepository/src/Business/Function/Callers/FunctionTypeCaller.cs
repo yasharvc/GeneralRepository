@@ -62,15 +62,28 @@ namespace Function.Callers
 				};
 			var obj = assembly.CreateInstance(functionPath);
 			var method = obj.GetType().GetMethod(function.Name);
-			var task = (Task)method.Invoke(obj, JsonToParameters(input));
-			await task.ConfigureAwait(false);
-			return new GeneralResult
+			var res = method.Invoke(obj, JsonToParameters(input));
+			if (res is Task task)
 			{
-				Id = Guid.NewGuid().ToString(),
-				CallResult = CallResultEnum.Success,
-				Result = task.GetType().GetProperty("Result").GetValue(task),
-				Exceptions = new List<ExceptionOfApplication>()
-			};
+				await task.ConfigureAwait(false);
+				return new GeneralResult
+				{
+					Id = Guid.NewGuid().ToString(),
+					CallResult = CallResultEnum.Success,
+					Result = task.GetType().GetProperty("Result").GetValue(task),
+					Exceptions = new List<ExceptionOfApplication>()
+				};
+			}
+			else
+			{
+				return new GeneralResult
+				{
+					Id = Guid.NewGuid().ToString(),
+					CallResult = CallResultEnum.Success,
+					Result = res,
+					Exceptions = new List<ExceptionOfApplication>()
+				};
+			}
 		}
 
 		private object[] JsonToParameters(string input) => Array.Empty<object>();

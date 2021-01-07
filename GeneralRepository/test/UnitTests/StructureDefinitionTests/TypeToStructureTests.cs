@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using Xunit;
 using Core.Extensions;
+using System.Collections.Generic;
 
 namespace UnitTests.StructureDefinitionTests
 {
@@ -20,6 +21,7 @@ namespace UnitTests.StructureDefinitionTests
 			public Guid GUID { get; set; }
 			public byte[] File { get; set; }
 			public InnerTestClass innerObject { get; set; }
+			public InnerTestClass[] ListOfObjects { get; set; }
 		}
 
 		class InnerTestClass

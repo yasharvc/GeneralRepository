@@ -87,11 +87,28 @@ namespace Core.Models.DataStructure
 				structureDefinition.Fields.Add(Field.NullableGuid($"{type.Name}_{prop.Name}", prop.Name));
 			else if (prop.PropertyType == typeof(byte[]))
 				structureDefinition.Fields.Add(Field.NotNullBinary($"{type.Name}_{prop.Name}", prop.Name));
+			else if(prop.PropertyType.GetInterfaces().Any(i => i.IsGenericType &&
+						i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+				structureDefinition.Fields.Add(MakeArrayField(type, prop));
 			else if (prop.PropertyType.IsClass)
-				structureDefinition.Fields.Add(MakeClassField(type, prop));
+				structureDefinition.Fields.Add(MakeObjectField(type, prop));
 		}
 
-		private Field MakeClassField(Type parent,PropertyInfo prop)
+		private Field MakeArrayField(Type parent, PropertyInfo prop)
+		{
+			var en = prop.PropertyType.GetInterfaces().Single(i => i.IsGenericType &&
+						i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+			return new Field
+			{
+				Id = $"{parent.Name}_{prop.Name}",
+				Name = prop.Name,
+				DataType = Enums.DataTypeEnum.Array,
+				Nullable = false,
+				Structure = new StructureDefinition(en.GenericTypeArguments[0])
+			};
+		}
+
+		private Field MakeObjectField(Type parent,PropertyInfo prop)
 		{
 			return new Field
 			{

@@ -1,19 +1,78 @@
-﻿using Core.Models;
+﻿using Core.Enums;
+using Core.Exceptions;
+using Core.Models;
+using Core.Models.Service;
+using Function.Exceptions;
 using Function.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Function.Callers
 {
 	internal class FunctionTypeCaller : IFunctionCaller
 	{
-		public Task<T> Call<T>(Core.Models.Function.Function function, string input)
-		{
-			throw new System.NotImplementedException();
+		private static List<Type> AllTypesInRuntime { get; set; } = new List<Type>();
+
+		static FunctionTypeCaller(){
+			var assemblies = new HashSet<Assembly>
+			{
+				Assembly.GetExecutingAssembly(),
+				Assembly.GetEntryAssembly(),
+				Assembly.GetCallingAssembly()
+			};
+			Assembly.GetExecutingAssembly().GetReferencedAssemblies().ToList()
+				.ForEach(an => assemblies.Add(Assembly.Load(an.ToString())));
+			Assembly.GetEntryAssembly().GetReferencedAssemblies().ToList()
+				.ForEach(an => assemblies.Add(Assembly.Load(an.ToString())));
+			Assembly.GetCallingAssembly().GetReferencedAssemblies().ToList()
+				.ForEach(an => assemblies.Add(Assembly.Load(an.ToString())));
+
+			assemblies.ToList().ForEach(assm => AllTypesInRuntime.AddRange(assm.GetTypes()));
 		}
 
-		public Task<T> Call<T>(Core.Models.Function.Function function, params object[] parameters)
+		public async Task<GeneralResult> Call(Core.Models.Function.Function function, string input)
 		{
-			throw new System.NotImplementedException();
+			var functionPath = function.CallPath.GetPath();
+			Assembly assembly;
+			var dllPath = functionPath.Substring(0, functionPath.IndexOf("@"));
+			functionPath = functionPath.Substring(functionPath.IndexOf("@") + 1);
+			if (AllTypesInRuntime.Any(m => m.FullName.Equals(functionPath)))
+			{
+				assembly = AllTypesInRuntime.Single(m => m.FullName.Equals(functionPath)).Assembly;
+			}
+			else
+			{
+				assembly = Assembly.Load(File.ReadAllBytes(dllPath));
+			}
+
+			if (assembly == null)
+				return new GeneralResult
+				{
+					Id = Guid.NewGuid().ToString(),
+					CallResult = CallResultEnum.Failure,
+					Result = null,
+					Exceptions = new List<ExceptionOfApplication>
+					{
+						new InvalidTypeException()
+					}
+				};
+			var obj = assembly.CreateInstance(functionPath);
+			var method = obj.GetType().GetMethod(function.Name);
+			var task = (Task)method.Invoke(obj, JsonToParameters(input));
+			await task.ConfigureAwait(false);
+			return new GeneralResult
+			{
+				Id = Guid.NewGuid().ToString(),
+				CallResult = CallResultEnum.Success,
+				Result = task.GetType().GetProperty("Result").GetValue(task),
+				Exceptions = new List<ExceptionOfApplication>()
+			};
 		}
+
+		private object[] JsonToParameters(string input) => Array.Empty<object>();
 	}
 }

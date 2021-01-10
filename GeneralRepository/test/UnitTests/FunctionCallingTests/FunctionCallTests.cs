@@ -1,6 +1,7 @@
 ﻿using Core.Enums;
 using Core.Models.DataStructure;
 using Function;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,6 +15,8 @@ namespace UnitTests.FunctionCallingTests
 			public string GetName() => "Name";
 			public Task<string> GetNameAsync() => Task.FromResult("Name");
 			public Task<string> SayHello(string name) => Task.FromResult($"Hello {name}!");
+			public Task<double> Mult(double value) => Task.FromResult(value * 25);
+			public Task<DateTime> AddTwoYear(DateTime input) => Task.FromResult(input.AddYears(2));
 		}
 
 		[Fact]
@@ -69,6 +72,57 @@ namespace UnitTests.FunctionCallingTests
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().SayHello("Yashar"), res.Result.ToString());
+			Assert.Empty(res.Exceptions);
+		}
+		[Fact]
+		public async void FunctionCaller_WithDoubleParameterFunction_ShouldReturnCalculatedValue()
+		{
+			var caller = new FunctionCaller();
+			var path = CallPathMaker.MakePath(FunctionPathTypeEnum.Function,
+				$"{GetType().Assembly.Location}@{typeof(CallTest).FullName}");
+			var res = await caller.Call(new Core.Models.Function.Function
+			{
+				CallPath = path,
+				Name = nameof(CallTest.Mult),
+				ReturnType = new StructureDefinition(typeof(double)),
+				Parameters = new StructureDefinition
+				{
+					Fields = new List<Field>
+					{
+						Field.NotNullFloat("value","value")
+					}
+				}
+			}, System.Text.Json.JsonSerializer.Serialize(new { value = 100 }));
+
+			Assert.Equal(CallResultEnum.Success, res.CallResult);
+			Assert.Equal(await new CallTest().Mult(100), Convert.ToDouble(res.Result));
+			Assert.Empty(res.Exceptions);
+		}
+		[Fact]
+		public async void FunctionCaller_WithDateTimeParameterFunction_ShouldReturnCalculatedDateTime()
+		{
+			var caller = new FunctionCaller();
+			var path = CallPathMaker.MakePath(FunctionPathTypeEnum.Function,
+				$"{GetType().Assembly.Location}@{typeof(CallTest).FullName}");
+
+			var date = DateTime.Now;
+
+			var res = await caller.Call(new Core.Models.Function.Function
+			{
+				CallPath = path,
+				Name = nameof(CallTest.AddTwoYear),
+				ReturnType = new StructureDefinition(typeof(double)),
+				Parameters = new StructureDefinition
+				{
+					Fields = new List<Field>
+					{
+						Field.NotNullDateTime("input","input")
+					}
+				}
+			}, System.Text.Json.JsonSerializer.Serialize(new { input = date }));
+
+			Assert.Equal(CallResultEnum.Success, res.CallResult);
+			Assert.Equal(await new CallTest().AddTwoYear(date), Convert.ToDateTime(res.Result));
 			Assert.Empty(res.Exceptions);
 		}
 	}

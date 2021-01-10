@@ -1,6 +1,6 @@
 ﻿using Core.Enums;
 using Core.Exceptions;
-using Core.Models;
+using Core.Extensions;
 using Core.Models.Service;
 using Function.Exceptions;
 using Function.Interfaces;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Function.Callers
@@ -62,7 +63,7 @@ namespace Function.Callers
 				};
 			var obj = assembly.CreateInstance(functionPath);
 			var method = obj.GetType().GetMethod(function.Name);
-			var res = method.Invoke(obj, JsonToParameters(input));
+			var res = method.Invoke(obj, JsonToParameters(method.GetParameters(),input));
 			if (res is Task task)
 			{
 				await task.ConfigureAwait(false);
@@ -86,6 +87,20 @@ namespace Function.Callers
 			}
 		}
 
-		private object[] JsonToParameters(string input) => Array.Empty<object>();
+		private object[] JsonToParameters(ParameterInfo[] parameterInfos, string input)
+		{
+			var doc = JsonDocument.Parse(input);
+			List<object> res = new List<object>();
+			foreach (var param in parameterInfos)
+			{
+				try
+				{
+					var tempJson = doc.RootElement.GetProperty(param.Name);
+					if(tempJson.ValueKind.IsSimpleType())
+						res.Add(tempJson.Cast)
+				}
+				catch { }
+			}
+		}
 	}
 }

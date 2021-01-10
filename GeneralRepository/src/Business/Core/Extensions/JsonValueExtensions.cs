@@ -51,5 +51,28 @@ namespace Core.Extensions
 					throw new NotImplementedException();
 			}
 		}
+		public static object Cast(this JsonElement fromValue, Type type)
+		{
+			if (type== typeof(bool))
+					return fromValue.GetBoolean();
+			else if (type == typeof(short))
+				return fromValue.GetInt16();
+			else if (type == typeof(int))
+				return fromValue.GetInt32();
+			else if (type == typeof(long))
+				return fromValue.GetInt64();
+			else if (type == typeof(float))
+				return (float)fromValue.GetDouble();
+			else if (type == typeof(double))
+				return fromValue.GetDouble();
+			else if (type == typeof(string))
+				return fromValue.GetString();
+			else if (type == typeof(Guid))
+				return new Guid(fromValue.GetString());
+			else if (type == typeof(DateTime))
+				return fromValue.GetDateTime();
+			else
+				throw new NotImplementedException();
+		}
 	}
 }

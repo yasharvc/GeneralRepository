@@ -98,6 +98,8 @@ namespace Function.Callers
 					var tempJson = doc.RootElement.GetProperty(param.Name);
 					if (tempJson.ValueKind.IsSimpleType())
 						res.Add(tempJson.Cast(param.ParameterType));
+					else if (tempJson.ValueKind == JsonValueKind.Object)
+						res.Add(JsonSerializer.Deserialize(tempJson.GetRawText(), param.ParameterType));
 				}
 				catch { }
 			}

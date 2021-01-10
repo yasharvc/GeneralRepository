@@ -10,6 +10,12 @@ namespace UnitTests.FunctionCallingTests
 {
 	public class FunctionCallTests
 	{
+		public class data
+		{
+			public string Fname { get; set; }
+			public string Lname { get; set; }
+		}
+
 		public class CallTest
 		{
 			public string GetName() => "Name";
@@ -17,6 +23,7 @@ namespace UnitTests.FunctionCallingTests
 			public Task<string> SayHello(string name) => Task.FromResult($"Hello {name}!");
 			public Task<double> Mult(double value) => Task.FromResult(value * 25);
 			public Task<DateTime> AddTwoYear(DateTime input) => Task.FromResult(input.AddYears(2));
+			public Task<string> GetFullName(data input) => Task.FromResult($"{input.Fname}-{input.Lname}");
 		}
 
 		[Fact]
@@ -123,6 +130,50 @@ namespace UnitTests.FunctionCallingTests
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().AddTwoYear(date), Convert.ToDateTime(res.Result));
+			Assert.Empty(res.Exceptions);
+		}
+		[Fact]
+		public async void FunctionCaller_WithClassParameterFunction_ShouldReturnString()
+		{
+			var caller = new FunctionCaller();
+			var path = CallPathMaker.MakePath(FunctionPathTypeEnum.Function,
+				$"{GetType().Assembly.Location}@{typeof(CallTest).FullName}");
+			var input = new data
+			{
+				Fname = "Yashar",
+				Lname = "Aliabbasi"
+			};
+
+			var res = await caller.Call(new Core.Models.Function.Function
+			{
+				CallPath = path,
+				Name = nameof(CallTest.GetFullName),
+				ReturnType = new StructureDefinition(typeof(string)),
+				Parameters = new StructureDefinition
+				{
+					Fields = new List<Field>
+					{
+						new Field
+						{
+							DataType = DataTypeEnum.Object,
+							Name = "input",
+							Id="input",
+							Nullable=false,
+							Structure = new StructureDefinition
+							{
+								Fields=new List<Field>
+								{
+									Field.NotNullString("Fname","Fname"),
+									Field.NotNullString("Lname","Lname"),
+								}
+							}
+						}
+					}
+				}
+			}, System.Text.Json.JsonSerializer.Serialize(new { input }));
+
+			Assert.Equal(CallResultEnum.Success, res.CallResult);
+			Assert.Equal(await new CallTest().GetFullName(input), res.Result.ToString());
 			Assert.Empty(res.Exceptions);
 		}
 	}

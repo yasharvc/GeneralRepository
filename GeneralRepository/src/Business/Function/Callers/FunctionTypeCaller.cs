@@ -96,11 +96,12 @@ namespace Function.Callers
 				try
 				{
 					var tempJson = doc.RootElement.GetProperty(param.Name);
-					if(tempJson.ValueKind.IsSimpleType())
-						res.Add(tempJson.Cast)
+					if (tempJson.ValueKind.IsSimpleType())
+						res.Add(tempJson.Cast(param.ParameterType));
 				}
 				catch { }
 			}
+			return res.ToArray();
 		}
 	}
 }

@@ -3,6 +3,7 @@ using Core.Models.DataStructure;
 using Function;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -24,6 +25,7 @@ namespace UnitTests.FunctionCallingTests
 			public Task<double> Mult(double value) => Task.FromResult(value * 25);
 			public Task<DateTime> AddTwoYear(DateTime input) => Task.FromResult(input.AddYears(2));
 			public Task<string> GetFullName(data input) => Task.FromResult($"{input.Fname}-{input.Lname}");
+			public Task<data> GetSampleData() => Task.FromResult(new data { Fname = "Yashar", Lname = "Aliabbasi" });
 		}
 
 		[Fact]
@@ -174,6 +176,27 @@ namespace UnitTests.FunctionCallingTests
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().GetFullName(input), res.Result.ToString());
+			Assert.Empty(res.Exceptions);
+		}
+		[Fact]
+		public async void FunctionCaller_WithNoParameterFunction_ShouldReturnObject()
+		{
+			var caller = new FunctionCaller();
+			var path = CallPathMaker.MakePath(FunctionPathTypeEnum.Function,
+				$"{GetType().Assembly.Location}@{typeof(CallTest).FullName}");
+
+
+			var res = await caller.Call(new Core.Models.Function.Function
+			{
+				CallPath = path,
+				Name = nameof(CallTest.GetSampleData),
+				ReturnType = new StructureDefinition(typeof(data))
+			}, "{}");
+
+			var expected = await new CallTest().GetSampleData();
+
+			Assert.Equal(CallResultEnum.Success, res.CallResult);
+			Assert.Equal(expected.Fname, JsonSerializer.Deserialize<data>(JsonSerializer.Serialize(res.Result)).Fname);
 			Assert.Empty(res.Exceptions);
 		}
 	}

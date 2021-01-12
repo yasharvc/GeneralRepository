@@ -115,9 +115,8 @@ namespace Function.Callers
 		private IList GetArrayValue(JsonElement tempJson, Type parameterType)
 		{
 			var listType = typeof(List<>);
-			var constructedListType = listType.MakeGenericType(parameterType);
+			var constructedListType = listType.MakeGenericType(parameterType.GetGenericArguments()[0]);
 			var instance = Activator.CreateInstance(constructedListType);
-			
 			
 			var res = (IList)instance;
 

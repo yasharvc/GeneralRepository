@@ -26,10 +26,10 @@ namespace UnitTests.FunctionCallingTests
 			public Task<DateTime> AddTwoYear(DateTime input) => Task.FromResult(input.AddYears(2));
 			public Task<string> GetFullName(data input) => Task.FromResult($"{input.Fname}-{input.Lname}");
 			public Task<data> GetSampleData() => Task.FromResult(new data { Fname = "Yashar", Lname = "Aliabbasi" });
-			public Task<string> ListProcess(List<data> users)
+			public Task<string> ListProcess(List<data> input)
 			{
 				var res = "";
-				foreach (var item in users)
+				foreach (var item in input)
 				{
 					res += $"{(res.Length > 0 ? "," : "")}{item.Fname}-{item.Lname}";
 				}

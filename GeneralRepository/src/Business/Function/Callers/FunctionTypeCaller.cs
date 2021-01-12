@@ -5,6 +5,7 @@ using Core.Models.Service;
 using Function.Exceptions;
 using Function.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -99,11 +100,31 @@ namespace Function.Callers
 					if (tempJson.ValueKind.IsSimpleType())
 						res.Add(tempJson.Cast(param.ParameterType));
 					else if (tempJson.ValueKind == JsonValueKind.Object)
-						res.Add(JsonSerializer.Deserialize(tempJson.GetRawText(), param.ParameterType));
+						res.Add(GetObjectValue(tempJson.GetRawText(), param.ParameterType));
+					else if (tempJson.ValueKind == JsonValueKind.Array)
+						res.Add(GetArrayValue(tempJson, param.ParameterType));
 				}
 				catch { }
 			}
 			return res.ToArray();
+		}
+
+		private static object GetObjectValue(string json,Type paramType) 
+			=> JsonSerializer.Deserialize(json, paramType);
+
+		private IList GetArrayValue(JsonElement tempJson, Type parameterType)
+		{
+			var listType = typeof(List<>);
+			var constructedListType = listType.MakeGenericType(parameterType);
+			var instance = Activator.CreateInstance(constructedListType);
+			
+			
+			var res = (IList)instance;
+
+			foreach (var item in tempJson.EnumerateArray())
+				res.Add(GetObjectValue(item.GetRawText(), parameterType.GetGenericArguments()[0]));
+
+			return res;
 		}
 	}
 }

@@ -26,6 +26,15 @@ namespace UnitTests.FunctionCallingTests
 			public Task<DateTime> AddTwoYear(DateTime input) => Task.FromResult(input.AddYears(2));
 			public Task<string> GetFullName(data input) => Task.FromResult($"{input.Fname}-{input.Lname}");
 			public Task<data> GetSampleData() => Task.FromResult(new data { Fname = "Yashar", Lname = "Aliabbasi" });
+			public Task<string> ListProcess(List<data> users)
+			{
+				var res = "";
+				foreach (var item in users)
+				{
+					res += $"{(res.Length > 0 ? "," : "")}{item.Fname}-{item.Lname}";
+				}
+				return Task.FromResult(res);
+			}
 		}
 
 		[Fact]
@@ -77,7 +86,7 @@ namespace UnitTests.FunctionCallingTests
 						Field.NotNullString("name","name")
 					}
 				}
-			}, System.Text.Json.JsonSerializer.Serialize(new { name = "Yashar" }));
+			}, JsonSerializer.Serialize(new { name = "Yashar" }));
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().SayHello("Yashar"), res.Result.ToString());
@@ -101,7 +110,7 @@ namespace UnitTests.FunctionCallingTests
 						Field.NotNullFloat("value","value")
 					}
 				}
-			}, System.Text.Json.JsonSerializer.Serialize(new { value = 100 }));
+			}, JsonSerializer.Serialize(new { value = 100 }));
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().Mult(100), Convert.ToDouble(res.Result));
@@ -128,7 +137,7 @@ namespace UnitTests.FunctionCallingTests
 						Field.NotNullDateTime("input","input")
 					}
 				}
-			}, System.Text.Json.JsonSerializer.Serialize(new { input = date }));
+			}, JsonSerializer.Serialize(new { input = date }));
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().AddTwoYear(date), Convert.ToDateTime(res.Result));
@@ -172,7 +181,7 @@ namespace UnitTests.FunctionCallingTests
 						}
 					}
 				}
-			}, System.Text.Json.JsonSerializer.Serialize(new { input }));
+			}, JsonSerializer.Serialize(new { input }));
 
 			Assert.Equal(CallResultEnum.Success, res.CallResult);
 			Assert.Equal(await new CallTest().GetFullName(input), res.Result.ToString());
@@ -199,5 +208,58 @@ namespace UnitTests.FunctionCallingTests
 			Assert.Equal(expected.Fname, JsonSerializer.Deserialize<data>(JsonSerializer.Serialize(res.Result)).Fname);
 			Assert.Empty(res.Exceptions);
 		}
+		[Fact]
+		public async void FunctionCaller_WithListParameterFunction_ShouldReturnString()
+		{
+			var caller = new FunctionCaller();
+			var path = CallPathMaker.MakePath(FunctionPathTypeEnum.Function,
+				$"{GetType().Assembly.Location}@{typeof(CallTest).FullName}");
+			var input = new List<data>
+			{
+				new data
+				{
+					Fname = "Yashar",
+					Lname = "Aliabbasi"
+				},
+				new data
+				{
+					Fname = "Test",
+					Lname = "Doe"
+				}
+			};
+
+			var res = await caller.Call(new Core.Models.Function.Function
+			{
+				CallPath = path,
+				Name = nameof(CallTest.ListProcess),
+				ReturnType = new StructureDefinition(typeof(string)),
+				Parameters = new StructureDefinition
+				{
+					Fields = new List<Field>
+					{
+						new Field
+						{
+							DataType = DataTypeEnum.Array,
+							Name = "input",
+							Id="input",
+							Nullable=false,
+							Structure = new StructureDefinition
+							{
+								Fields=new List<Field>
+								{
+									Field.NotNullString("Fname","Fname"),
+									Field.NotNullString("Lname","Lname"),
+								}
+							}
+						}
+					}
+				}
+			}, JsonSerializer.Serialize(new { input }));
+
+			Assert.Equal(CallResultEnum.Success, res.CallResult);
+			Assert.Equal(await new CallTest().ListProcess(input), res.Result.ToString());
+			Assert.Empty(res.Exceptions);
+		}
+
 	}
 }
